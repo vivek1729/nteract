@@ -34,6 +34,15 @@ import urljoin from "url-join";
 
 import { RecordOf } from "immutable";
 
+/**
+ * Updates the name of a file using the contents API.
+ *
+ * @param action$ A stream of Redux actions
+ * @param state$  A stream of Redux state changes
+ *
+ * @returns       Emit a CHANGE_CONTENT_NAME_FULFILLED or
+ *                CHANGE_CONTENT_NAME_FAILURE action
+ */
 export function updateContentEpic(
   action$: ActionsObservable<actions.ChangeContentName>,
   state$: StateObservable<AppState>
@@ -102,6 +111,14 @@ export function updateContentEpic(
   );
 }
 
+/**
+ * Fetches the contents of a file given a certain filepath from the contents API.
+ *
+ * @param action$ A stream of Redux actions
+ * @param state$  A stream of Redux state changes
+ *
+ * @returns       Emits a FETCH_CONTENT_FULFILLED or FETCH_CONTENT_FAILURE action
+ */
 export function fetchContentEpic(
   action$: ActionsObservable<
     | actions.FetchContent
@@ -220,6 +237,15 @@ const someArbitraryPrimesAround30k = [
   28109
 ];
 
+/**
+ * Emits a save action on a ~30 second interval for the active
+ * ContentRef if there has been a change in the document model.
+ *
+ * @param action$ A stream of Redux actions
+ * @param state$  A stream of Redux state changes
+ *
+ * @returns       Emits a SAVE action for the active ContentRef
+ */
 export function autoSaveCurrentContentEpic(
   action$: ActionsObservable<Action>,
   state$: StateObservable<AppState>
@@ -306,6 +332,15 @@ function serializeContent(
   return { saveModel, serializedData };
 }
 
+/**
+ * Listens for a SAVE or DOWNLOAD_CONTENT action and saves the file
+ * using the contents API.
+ *
+ * @param action$ A stream of Redux actions
+ * @param state$  A stream of Redux state changes
+ *
+ * @returns       A fulfilled or failure action for the observed action
+ */
 export function saveContentEpic(
   action$: ActionsObservable<actions.Save | actions.DownloadContent>,
   state$: StateObservable<AppState>
@@ -378,8 +413,6 @@ export function saveContentEpic(
 
       switch (action.type) {
         case actions.DOWNLOAD_CONTENT: {
-          // FIXME: Convert this to downloadString, so it works for
-          // both files & notebooks
           if (
             content.type === "notebook" &&
             typeof serializedData === "object"
@@ -430,9 +463,7 @@ export function saveContentEpic(
               const diskDate = new Date(model.last_modified);
               const inMemoryDate = content.lastSaved
                 ? new Date(content.lastSaved)
-                : // FIXME: I'm unsure if we don't have a date if we should
-                  // default to the disk date
-                  diskDate;
+                : diskDate;
               const diffDate = diskDate.getTime() - inMemoryDate.getTime();
 
               if (Math.abs(diffDate) > 600) {
@@ -472,6 +503,15 @@ export function saveContentEpic(
   );
 }
 
+/**
+ * Listens for the SAVE_AS action and saves a new file using the contents API.
+ *
+ * @param action$ A stream of Redux actions
+ * @param state$  A stream of Redux state changes
+ *
+ * @returns       Returns a SAVE_AS_FAILED or SAVE_AS_FULFILLED action
+ *                depending on the status of the save
+ */
 export function saveAsContentEpic(
   action$: ActionsObservable<actions.SaveAs>,
   state$: StateObservable<AppState>

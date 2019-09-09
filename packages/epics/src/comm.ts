@@ -2,7 +2,7 @@ import { createMessage, ofMessageType } from "@nteract/messaging";
 import { ofType } from "redux-observable";
 import { ActionsObservable } from "redux-observable";
 import { merge } from "rxjs";
-import { map, retry, switchMap, takeUntil } from "rxjs/operators";
+import { map, switchMap, takeUntil } from "rxjs/operators";
 
 import {
   commMessageAction,
@@ -13,12 +13,14 @@ import {
 } from "@nteract/actions";
 
 /**
- * creates a comm open message
- * @param  {string} comm_id       uuid
- * @param  {string} target_name   comm handler
- * @param  {any} data             up to the target handler
- * @param  {string} target_module [Optional] used to select a module that is responsible for handling the target_name
- * @return {jmp.Message}          Message ready to send on the shell channel
+ * Creates a comm_open message targeting a comm handler.
+ *
+ * @param  comm_id       Unique identifier for the comm
+ * @param  target_name   Name of the target comm
+ * @param  data          Data to transmit to the comm
+ * @param  target_module [Optional] Used to select a module that
+ *                        is responsible for handling the target_name
+ * @return         Message ready to send on the shell channel
  */
 export function createCommOpenMessage(
   comm_id: string,
@@ -36,11 +38,12 @@ export function createCommOpenMessage(
 }
 
 /**
- * creates a comm message for sending to a kernel
- * @param  {string}     comm_id    unique identifier for the comm
- * @param  {Object}     data       any data to send for the comm
- * @param  {Uint8Array} buffers    arbitrary binary data to send on the comm
- * @return {jmp.Message}           jupyter message for comm_msg
+ * Creates a comm_msg for sending to a kernel.
+ *
+ * @param  comm_id    Unique identifier for the comm
+ * @param  data       Data to transmit to the comm
+ * @param  buffers    Arbitrary binary data to send on the comm
+ * @return            Jupyter message for comm_msg
  */
 export function createCommMessage(
   comm_id: string,
@@ -51,11 +54,12 @@ export function createCommMessage(
 }
 
 /**
- * creates a comm close message for sending to a kernel
- * @param  {Object} parent_header    header from a parent jupyter message
- * @param  {string}     comm_id      unique identifier for the comm
- * @param  {Object}     data         any data to send for the comm
- * @return {jmp.Message}             jupyter message for comm_msg
+ * Creates a comm close message for sending to a kernel.
+ *
+ * @param  {Object} parent_header    Header from a parent jupyter message
+ * @param  {string}     comm_id      Unique identifier for the comm
+ * @param  {Object}     data         Data to transmit to the comm
+ * @return {jmp.Message}             Jupyter message for comm_msg
  */
 export function createCommCloseMessage(
   parent_header: any,
@@ -69,10 +73,11 @@ export function createCommCloseMessage(
 }
 
 /**
- * An epic that emits comm actions from the backend kernel
- * @param  {ActionsObservable} action$ Action Observable from redux-observable
- * @param  {redux.Store} store   the redux store
- * @return {ActionsObservable}         Comm actions
+ * An epic that emits comm actions from the backend kernel.
+ *
+ * @param  action$  Action Observable from redux-observable
+ * @return          COMM_OPEN and COMM_MSG actions for each message
+ *                  from the backend kernel.
  */
 export const commListenEpic = (action$: ActionsObservable<NewKernelAction>) =>
   action$.pipe(
