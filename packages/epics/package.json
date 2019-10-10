@@ -1,6 +1,6 @@
 {
   "name": "@nteract/epics",
-  "version": "2.6.1",
+  "version": "2.6.2",
   "description": "Redux-Observable epics for nteract apps",
   "keywords": [
     "jupyter",
@@ -32,7 +32,7 @@
     "url": "https://github.com/nteract/nteract/issues"
   },
   "dependencies": {
-    "@nteract/actions": "^2.7.4",
+    "@nteract/actions": "^2.7.5",
     "@nteract/commutable": "^7.1.4",
     "@nteract/messaging": "^6.1.3",
     "@nteract/selectors": "^2.3.3",

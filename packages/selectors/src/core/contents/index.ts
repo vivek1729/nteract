@@ -67,6 +67,21 @@ export const kernelRefByContentRef = (
   return null;
 };
 
+/*
+ * Returns the kernel associated with the current ContentRef.
+ */
+export const kernelByContentRef = (
+  state: AppState,
+  ownProps: { contentRef: ContentRef }
+) => {
+  const kernelRef = kernelRefByContentRef(state, ownProps);
+  if (kernelRef) {
+    return state.core.entities.kernels.byRef.get(kernelRef);
+  }
+
+  return null;
+};
+
 /**
  * Returns the filepath for the content identified by a given ContentRef.
  *

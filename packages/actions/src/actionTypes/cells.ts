@@ -271,5 +271,6 @@ export interface SendInputReply {
   type: "SEND_INPUT_REPLY";
   payload: {
     value: string;
+    contentRef: ContentRef;
   };
 }

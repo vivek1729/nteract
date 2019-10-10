@@ -1,7 +1,5 @@
 import { AppState, KernelspecsByRefRecord } from "@nteract/types";
 
-import { createSelector } from "reselect";
-
 /**
  * Returns a ref to the kernelspec of the kernel the nteract application
  * is currently connected to.
@@ -29,7 +27,16 @@ export const kernelspecsByRef = (state: AppState) =>
  */
 export const currentKernelspecs: (
   state: AppState
-) => KernelspecsByRefRecord | null | undefined = createSelector(
-  [currentKernelspecsRef, kernelspecsByRef],
-  (ref, byRef) => (ref ? byRef.get(ref) : null)
-);
+) => KernelspecsByRefRecord | null = (state: AppState) => {
+  const ref = state.core.currentKernelspecsRef;
+
+  if (ref) {
+    const kernelspecs = state.core.entities.kernelspecs.byRef.get(ref);
+    if (kernelspecs) {
+      return kernelspecs;
+    }
+  }
+
+  // If we don't have a current kernelspecs ref, return null
+  return null;
+};

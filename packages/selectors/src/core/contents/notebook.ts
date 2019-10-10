@@ -92,31 +92,19 @@ export const codeCellIdsBelow = (
 /**
  * Returns the CellIds of the hidden cells in a notebook.
  */
-export const hiddenCellIds = createSelector(
-  [cellMap, cellOrder],
-  (cellMap, cellOrder) => {
-    return cellOrder.filter(id =>
-      cellMap.getIn([id, "metadata", "inputHidden"])
-    );
-  }
-);
+export const hiddenCellIds = (model: NotebookModel) =>
+  model.notebook.cellOrder.filter(id =>
+    model.notebook.cellMap.getIn([id, "metadata", "inputHidden"])
+  );
 
 /**
  * Returns the CellIds of the cells with hidden outputs in the
  * notebook.
  */
-export const idsOfHiddenOutputs = createSelector(
-  [cellMap, cellOrder],
-  (cellMap, cellOrder): Immutable.List<CellId> => {
-    if (!cellOrder || !cellMap) {
-      return Immutable.List<CellId>();
-    }
-
-    return cellOrder.filter(CellId =>
-      cellMap.getIn([CellId, "metadata", "outputHidden"])
-    );
-  }
-);
+export const idsOfHiddenOutputs = (model: NotebookModel) =>
+  model.notebook.cellOrder.filter(id =>
+    model.notebook.cellMap.getIn([id, "metadata", "outputHidden"])
+  );
 
 /**
  * Returns a transient version of the cell map within a notebook. This cell
@@ -135,12 +123,10 @@ export const cellPromptById = (model: NotebookModel, { id }: { id: CellId }) =>
 /**
  * Returns the CellIds of the code cells within a notebook.
  */
-export const codeCellIds = createSelector(
-  [cellMap, cellOrder],
-  (cellMap, cellOrder) => {
-    return cellOrder.filter(id => cellMap.getIn([id, "cell_type"]) === "code");
-  }
-);
+export const codeCellIds = (model: NotebookModel) =>
+  model.notebook.cellOrder.filter(
+    id => model.notebook.cellMap.getIn([id, "cell_type"]) === "code"
+  );
 
 /**
  * Returns the metadata of a notebook. Returns an empty Immutable.Map if

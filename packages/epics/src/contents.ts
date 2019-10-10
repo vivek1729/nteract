@@ -34,6 +34,7 @@ import { AjaxResponse } from "rxjs/ajax";
 import urljoin from "url-join";
 
 import { RecordOf } from "immutable";
+import { existsSync } from "fs";
 
 export function updateContentEpic(
   action$: ActionsObservable<actions.ChangeContentName>,
@@ -228,7 +229,6 @@ export function autoSaveCurrentContentEpic(
   // Pick an autosave duration that won't have the exact
   // same cycle as another open tab
   const duration = sample(someArbitraryPrimesAround30k);
-
   return interval(duration).pipe(
     mergeMap(() => {
       const state = state$.value;
@@ -242,7 +242,10 @@ export function autoSaveCurrentContentEpic(
              */
             content =>
               (content.type === "file" || content.type === "notebook") &&
-              content.filepath !== ""
+              content.filepath !== "" &&
+              selectors.isCurrentKernelZeroMQ(state)
+                ? existsSync(content.filepath)
+                : true
           )
           .keys()
       );

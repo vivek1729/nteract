@@ -5,7 +5,7 @@ import * as notebook from "./core/contents/notebook";
 // Export sub-selectors (those that operate on contents models for instance)
 export { notebook };
 
-// Export all selectors from files for backwards-compatability with older imports
+// Export all selectors from files for backwards-compatibility with older imports
 export * from "./core/contents";
 export * from "./core/hosts";
 export * from "./core/kernels";

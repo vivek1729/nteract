@@ -111,7 +111,7 @@ function createHeader<MT extends MessageType>(
     version: "5.2",
     msg_type,
 
-    // These fields get overriden by enchannel implementations, we supply them
+    // These fields get overridden by enchannel implementations, we supply them
     // as a fallback here
     username: "nteract",
     session: uuid()

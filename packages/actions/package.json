@@ -1,6 +1,6 @@
 {
   "name": "@nteract/actions",
-  "version": "2.7.4",
+  "version": "2.7.5",
   "description": "A collection of actions",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",

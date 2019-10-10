@@ -222,7 +222,7 @@ const makeMapDispatchToCellProps = (
     toggleParameterCell: () =>
       dispatch(actions.toggleParameterCell({ id, contentRef })),
     sendInputReply: (value: string) =>
-      dispatch(actions.sendInputReply({ value })),
+      dispatch(actions.sendInputReply({ value, contentRef })),
 
     updateOutputMetadata: (
       index: number,

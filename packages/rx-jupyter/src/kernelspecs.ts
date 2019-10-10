@@ -4,7 +4,7 @@ import { ServerConfig } from "@nteract/types";
 import { createAJAXSettings } from "./base";
 
 /**
- * Creates an AjaxObservable for listing avaialble kernelspecs.
+ * Creates an AjaxObservable for listing available kernelspecs.
  *
  * @param serverConfig The server configuration
  *
@@ -20,7 +20,7 @@ export const list = (serverConfig: ServerConfig): Observable<AjaxResponse> =>
  * @param serverConfig The server configuration
  * @param name The name of the kernel
  *
- * @returns An Observable with the request reponse
+ * @returns An Observable with the request response
  */
 export const get = (
   serverConfig: ServerConfig,

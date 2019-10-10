@@ -101,11 +101,8 @@ export interface PureNotebookMenuProps {
     kernelRef?: string | null;
     contentRef: string;
   }) => void;
-  killKernel?: (payload: {
-    restarting: boolean;
-    kernelRef?: string | null;
-  }) => void;
-  interruptKernel?: (payload: { kernelRef?: string | null }) => void;
+  killKernel?: (payload: actions.KillKernelAction["payload"]) => void;
+  interruptKernel?: (payload: actions.InterruptKernel["payload"]) => void;
   currentContentRef: ContentRef;
   currentKernelspecsRef?: KernelspecsRef | null;
   currentKernelspecs?: KernelspecsByRefRecord | null;
@@ -147,7 +144,6 @@ class PureNotebookMenu extends React.PureComponent<PureNotebookMenuProps> {
       saveNotebook,
       downloadNotebook,
       changeKernelByName,
-      currentKernelRef,
       copyCell,
       createCellBelow,
       cutCell,
@@ -165,6 +161,7 @@ class PureNotebookMenu extends React.PureComponent<PureNotebookMenuProps> {
       restartKernelAndRunAllOutputs,
       killKernel,
       interruptKernel,
+      currentKernelRef,
       currentContentRef,
       toggleNotebookHeaderEditor
     } = this.props;
@@ -248,33 +245,30 @@ class PureNotebookMenu extends React.PureComponent<PureNotebookMenuProps> {
         openAboutModal && openAboutModal();
         break;
       case INTERRUPT_KERNEL:
-        interruptKernel && interruptKernel({ kernelRef: currentKernelRef });
+        interruptKernel && interruptKernel({ contentRef: currentContentRef });
         break;
       case RESTART_KERNEL:
         restartKernel &&
           restartKernel({
             outputHandling: "None",
-            kernelRef: currentKernelRef,
             contentRef: currentContentRef
           });
         break;
       case RESTART_AND_CLEAR_OUTPUTS:
         restartKernelAndClearOutputs &&
           restartKernelAndClearOutputs({
-            kernelRef: currentKernelRef,
             contentRef: currentContentRef
           });
         break;
       case RESTART_AND_RUN_ALL_OUTPUTS:
         restartKernelAndRunAllOutputs &&
           restartKernelAndRunAllOutputs({
-            kernelRef: currentKernelRef,
             contentRef: currentContentRef
           });
         break;
       case KILL_KERNEL:
         killKernel &&
-          killKernel({ restarting: false, kernelRef: currentKernelRef });
+          killKernel({ restarting: false, kernelRef: currentKernelRef, contentRef: currentContentRef });
         break;
       case CHANGE_KERNEL:
         changeKernelByName &&

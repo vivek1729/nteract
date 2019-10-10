@@ -71,7 +71,7 @@ export const kill = (serverConfig: ServerConfig, id: string) =>
  * Creates an AjaxObservable for interrupting a kernel.
  *
  * @param serverConfig The server configuration
- * @param id The id of the kernel to interupt
+ * @param id The id of the kernel to interrupt
  *
  * @returns An Observable with the request response
  */

@@ -1,13 +1,13 @@
 {
   "name": "@nteract/outputs",
-  "version": "2.3.1",
+  "version": "2.3.2",
   "description": "components for rendering outputs",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "nteractDesktop": "src/index.ts",
   "scripts": {},
   "dependencies": {
-    "@nteract/markdown": "^4.0.2",
+    "@nteract/markdown": "^4.0.3",
     "@nteract/mathjax": "^4.0.0",
     "ansi-to-react": "^5.0.0",
     "react-json-tree": "^0.11.0",

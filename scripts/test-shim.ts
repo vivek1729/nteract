@@ -11,9 +11,9 @@
 // For some reason, this property does not get set above.
 global.Image = global.window.Image;
 
-global.Range = function Range() {};
+global.Range = function Range(): void {};
 
-global.Blob = function(content, options) {
+global.Blob = function(content: any[], options: object): any {
   return { content, options };
 };
 
@@ -26,16 +26,17 @@ require("jquery-ui");
 require("jquery-ui/ui/widget");
 require("jquery-ui/ui/widgets/mouse");
 
-const createContextualFragment = html => {
+const createContextualFragment = (html: string) => {
   const div = document.createElement("div");
   div.innerHTML = html;
-  return div.children[0]; // so hokey it's not even funny
+  // Element and DocumentFragment are technically incompatible
+  return (div.children[0] as unknown) as DocumentFragment; // so hokey it's not even funny
 };
 
-Range.prototype.createContextualFragment = html =>
+Range.prototype.createContextualFragment = (html: string) =>
   createContextualFragment(html);
 
-global.window.URL.createObjectURL = function() {};
+global.window.URL.createObjectURL = function(): void {};
 global.window.focus = () => {};
 
 // HACK: Polyfill that allows codemirror to render in a JSDOM env.

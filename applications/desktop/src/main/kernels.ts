@@ -105,7 +105,7 @@ export function condaEnvsObservable(condaInfo$: Observable<CondaInfoJSON>) {
 }
 
 /**
- * createKernelSpecsFromEnvs generates a dictionary with the supported langauge
+ * createKernelSpecsFromEnvs generates a dictionary with the supported language
  * paths.
  */
 export function createKernelSpecsFromEnvs(

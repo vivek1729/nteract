@@ -416,7 +416,8 @@ describe("dispatchInterruptKernel", () => {
       expect(store.dispatch).toHaveBeenCalledWith({
         type: actions.INTERRUPT_KERNEL,
         payload: {
-          kernelRef: "k1"
+          kernelRef: "k1",
+          contentRef: "123"
         }
       });
     } else {

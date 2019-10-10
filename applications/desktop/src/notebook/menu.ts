@@ -343,7 +343,9 @@ export function dispatchInterruptKernel(
       return;
     }
 
-    store.dispatch(actions.interruptKernel({ kernelRef }));
+    store.dispatch(
+      actions.interruptKernel({ kernelRef, contentRef: ownProps.contentRef })
+    );
   }
 }
 

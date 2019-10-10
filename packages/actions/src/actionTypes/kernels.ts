@@ -85,6 +85,7 @@ export interface InterruptKernel {
   type: "INTERRUPT_KERNEL";
   payload: {
     kernelRef?: KernelRef | null;
+    contentRef?: ContentRef | null;
   };
 }
 
@@ -112,6 +113,7 @@ export interface KillKernelAction {
   payload: {
     restarting: boolean;
     kernelRef?: KernelRef | null;
+    contentRef?: ContentRef | null;
   };
 }
 

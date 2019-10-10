@@ -6,6 +6,7 @@ import { toArray } from "rxjs/operators";
 import * as actions from "@nteract/actions";
 import * as stateModule from "@nteract/types";
 
+import { makeDocumentRecord } from "@nteract/types";
 import * as coreEpics from "../src";
 
 describe("launchWebSocketKernelEpic", () => {
@@ -86,7 +87,7 @@ describe("launchWebSocketKernelEpic", () => {
 });
 
 describe("interruptKernelEpic", () => {
-  test("", async () => {
+  test("can interrupt a kernel when given a kernel ref", async () => {
     const state$ = new StateObservable(new Subject<stateModule.AppState>(), {
       core: stateModule.makeStateRecord({
         kernelRef: "fake",
@@ -127,6 +128,58 @@ describe("interruptKernelEpic", () => {
       {
         type: "INTERRUPT_KERNEL_SUCCESSFUL",
         payload: { kernelRef: "fake" }
+      }
+    ]);
+  });
+  test("can interrupt a kernel when given a content ref", async () => {
+    const state$ = new StateObservable(new Subject<stateModule.AppState>(), {
+      core: stateModule.makeStateRecord({
+        entities: stateModule.makeEntitiesRecord({
+          kernels: stateModule.makeKernelsRecord({
+            byRef: Immutable.Map({
+              fakeKernelRef: stateModule.makeRemoteKernelRecord({
+                type: "websocket",
+                channels: new Subject<any>(),
+                kernelSpecName: "fancy",
+                id: "0"
+              })
+            })
+          }),
+          contents: stateModule.makeContentsRecord({
+            byRef: Immutable.Map({
+              contentRef: stateModule.makeNotebookContentRecord({
+                model: stateModule.makeDocumentRecord({
+                  kernelRef: "fakeKernelRef"
+                })
+              })
+            })
+          })
+        })
+      }),
+      app: stateModule.makeAppRecord({
+        host: stateModule.makeJupyterHostRecord({
+          type: "jupyter",
+          token: "eh",
+          basePath: "http://localhost:8888/"
+        }),
+        notificationSystem: { addNotification: jest.fn() }
+      }),
+      comms: stateModule.makeCommsRecord(),
+      config: Immutable.Map({})
+    });
+    const action$ = ActionsObservable.of(
+      actions.interruptKernel({ contentRef: "contentRef" })
+    );
+
+    const responseActions = await coreEpics
+      .interruptKernelEpic(action$, state$)
+      .pipe(toArray())
+      .toPromise();
+
+    expect(responseActions).toEqual([
+      {
+        type: "INTERRUPT_KERNEL_SUCCESSFUL",
+        payload: { kernelRef: undefined }
       }
     ]);
   });

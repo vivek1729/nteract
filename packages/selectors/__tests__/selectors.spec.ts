@@ -44,3 +44,27 @@ describe("contentRefByFilepath", () => {
     ).toBeDefined();
   });
 });
+
+describe("kernelByContentRef", () => {
+  test("returns undefined if ContentRef does not exist", () => {
+    const state = mockAppState();
+
+    expect(
+      selectors.kernelByContentRef(state, {
+        contentRef: "non-existing-content-ref"
+      })
+    ).toBeNull();
+  });
+  test("returns kernel if ContentRef is valid", () => {
+    const state = mockAppState();
+    const contentRef = state.core.entities.contents.byRef
+      .keySeq()
+      .first() as string;
+
+    expect(
+      selectors.kernelByContentRef(state, {
+        contentRef
+      })
+    ).toBeDefined();
+  });
+});
