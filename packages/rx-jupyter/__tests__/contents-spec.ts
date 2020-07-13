@@ -1,4 +1,4 @@
-import * as contents from "../src/contents";
+import { JupyterContentProvider } from "../src/contents";
 import { AjaxObservable } from "./types";
 
 const serverConfig = {
@@ -9,7 +9,7 @@ const serverConfig = {
 describe("contents", () => {
   describe("remove", () => {
     test("creates the AjaxObservable for removing contents", () => {
-      const remove$ = contents.remove(
+      const remove$ = JupyterContentProvider.remove(
         serverConfig,
         "/path.ipynb"
       ) as AjaxObservable;
@@ -20,7 +20,7 @@ describe("contents", () => {
   });
   describe("get", () => {
     test("creates the AjaxObservable for getting content", () => {
-      const content$ = contents.get(
+      const content$ = JupyterContentProvider.get(
         serverConfig,
         "/walla/walla/bingbang.ipynb"
       ) as AjaxObservable;
@@ -35,7 +35,7 @@ describe("contents", () => {
       expect(request.responseType).toBe("json");
     });
     test("creates the AjaxObservable for getting content with query parameters", () => {
-      const content$ = contents.get(serverConfig, "/walla/walla", {
+      const content$ = JupyterContentProvider.get(serverConfig, "/walla/walla", {
         type: "directory"
       }) as AjaxObservable;
       const request = content$.request;
@@ -53,7 +53,7 @@ describe("contents", () => {
   describe("update", () => {
     test("creates the AjaxObservable for renaming a file", () => {
       const model = { path: "renamed/path" };
-      const content$ = contents.update(serverConfig, "/path/to/rename", model);
+      const content$ = JupyterContentProvider.update(serverConfig, "/path/to/rename", model);
       const request = (content$ as AjaxObservable).request;
       expect(request.url).toBe(
         "http://localhost:8888/api/contents/path/to/rename"
@@ -74,7 +74,7 @@ describe("contents", () => {
         content: {},
         format: "json"
       };
-      const create$ = contents.create(serverConfig, "/a/b/c.ipynb", model);
+      const create$ = JupyterContentProvider.create(serverConfig, "/a/b/c.ipynb", model);
       const request = (create$ as AjaxObservable).request;
       expect(request.url).toBe(
         "http://localhost:8888/api/contents/a/b/c.ipynb"
@@ -93,8 +93,8 @@ describe("contents", () => {
       const model = {
         path: "save/to/this/path"
       };
-      const create$ = contents.save(serverConfig, "/path/to/content", model);
-      const request = (create$ as AjaxObservable).request;
+      const create$ = JupyterContentProvider.save(serverConfig, "/path/to/content", model);
+      const request = (create$.source as AjaxObservable).request; // Because of a workaround the AjaxObservable is source
       expect(request.url).toBe(
         "http://localhost:8888/api/contents/path/to/content"
       );
@@ -106,7 +106,7 @@ describe("contents", () => {
   });
   describe("listCheckpoints", () => {
     test("creates the AjaxObservable for listing checkpoints of a file", () => {
-      const create$ = contents.listCheckpoints(
+      const create$ = JupyterContentProvider.listCheckpoints(
         serverConfig,
         "/path/to/content"
       );
@@ -123,7 +123,7 @@ describe("contents", () => {
   });
   describe("createCheckpoint", () => {
     test("creates the AjaxObservable for", () => {
-      const create$ = contents.createCheckpoint(
+      const create$ = JupyterContentProvider.createCheckpoint(
         serverConfig,
         "/path/to/content"
       );
@@ -138,7 +138,7 @@ describe("contents", () => {
   });
   describe("deleteCheckpoint", () => {
     test("creates the AjaxObservable for", () => {
-      const create$ = contents.deleteCheckpoint(
+      const create$ = JupyterContentProvider.deleteCheckpoint(
         serverConfig,
         "/path/to/content",
         "id"
@@ -154,7 +154,7 @@ describe("contents", () => {
   });
   describe("restoreFromCheckpoint", () => {
     test("creates the AjaxObservable for", () => {
-      const create$ = contents.restoreFromCheckpoint(
+      const create$ = JupyterContentProvider.restoreFromCheckpoint(
         serverConfig,
         "/path/to/content",
         "id"

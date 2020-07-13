@@ -1,0 +1,23 @@
+site_name: nteract
+repo_url: https://github.com/nteract/nteract
+repo_name: "GitHub"
+
+nav:
+  - Home: "index.md"
+  - User Guides for Apps:
+      - "Getting Started with nteract": "getting-started-with-nteract.md"
+      - "Creating data visualizations in nteract": "creating-data-visualizations-in-nteract.md"
+      - "nteract Desktop Keyboard Shortcuts": "kbd-shortcuts.md"
+      - "Configuring the nteract desktop app": "desktop-config.md"
+  - User Guides for Core SDK:
+      - "@nteract/actions": "!include ./packages/actions/mkdocs.yml"
+      - "@nteract/commutable": "!include ./packages/commutable/mkdocs.yml"
+      - "@nteract/core": "!include ./packages/core/mkdocs.yml"
+      - "@nteract/epics": "!include ./packages/epics/mkdocs.yml"
+      - "@nteract/stateful-components": "!include ./packages/stateful-components/mkdocs.yml"
+
+plugins:
+  - monorepo
+
+theme:
+  name: gitbook

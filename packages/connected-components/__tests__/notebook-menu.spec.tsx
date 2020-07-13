@@ -2,7 +2,14 @@ import { mount, shallow } from "enzyme";
 import React from "react";
 import renderer from "react-test-renderer";
 
-import { PureNotebookMenu } from "../src/notebook-menu";
+import { mockAppState } from "@nteract/fixtures";
+
+import { actions } from "@nteract/core";
+import {
+  makeMapDispatchToProps,
+  makeMapStateToProps,
+  PureNotebookMenu
+} from "../src/notebook-menu";
 import { MENU_ITEM_LABELS } from "../src/notebook-menu/constants";
 
 describe("PureNotebookMenu", () => {
@@ -231,7 +238,7 @@ describe("PureNotebookMenu", () => {
       expect(props.restartKernel).toHaveBeenCalledTimes(1);
       expect(props.restartKernel).toHaveBeenCalledWith({
         outputHandling: "None",
-        contentRef: props.currentContentRef,
+        contentRef: props.currentContentRef
       });
 
       const restartKernelAndClearOutputsItem = wrapper.find({
@@ -241,7 +248,7 @@ describe("PureNotebookMenu", () => {
       restartKernelAndClearOutputsItem.simulate("click", eventMock);
       expect(props.restartKernelAndClearOutputs).toHaveBeenCalledTimes(1);
       expect(props.restartKernelAndClearOutputs).toHaveBeenCalledWith({
-        contentRef: props.currentContentRef,
+        contentRef: props.currentContentRef
       });
 
       const restartKernelAndRunAllOutputsItem = wrapper.find({
@@ -251,7 +258,7 @@ describe("PureNotebookMenu", () => {
       restartKernelAndRunAllOutputsItem.simulate("click", eventMock);
       expect(props.restartKernelAndRunAllOutputs).toHaveBeenCalledTimes(1);
       expect(props.restartKernelAndRunAllOutputs).toHaveBeenCalledWith({
-        contentRef: props.currentContentRef,
+        contentRef: props.currentContentRef
       });
 
       const killKernelItem = wrapper.find({ text: KILL_KERNEL });
@@ -264,5 +271,41 @@ describe("PureNotebookMenu", () => {
         restarting: false
       });
     });
+  });
+});
+
+describe("makeMapStateToProps", () => {
+  it("returns default values if content is not a notebook", () => {
+    const state = mockAppState({});
+    const result = makeMapStateToProps(state, { contentRef: "test" })(state);
+    expect(result).toEqual({
+      currentContentRef: "test",
+      currentKernelRef: null,
+      currentKernelspecs: null,
+      currentKernelspecsRef: null
+    });
+  });
+  it("returns default values if content isa notebook", () => {
+    const state = mockAppState({});
+    const contentRef = state.core.entities.contents.byRef.keySeq().first();
+    const result = makeMapStateToProps(state, { contentRef })(state);
+    expect(result).toEqual({
+      currentContentRef: contentRef,
+      currentKernelRef: expect.any(String),
+      currentKernelspecs: null,
+      currentKernelspecsRef: null,
+      bookstoreEnabled: false
+    });
+  });
+});
+
+describe("makeMapDispatchToProps", () => {
+  it("returns the required actions", () => {
+    const dispatch = jest.fn();
+    const result = makeMapDispatchToProps(dispatch, { contentRef: "test " })(
+      dispatch
+    );
+    result.saveNotebook({ contentRef: "test" });
+    expect(dispatch).toBeCalledWith(actions.save({ contentRef: "test" }));
   });
 });

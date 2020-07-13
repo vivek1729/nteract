@@ -62,6 +62,7 @@ class Notebook extends React.PureComponent<Props, State> {
       this.props.addTransform(module.VegaLite1);
       this.props.addTransform(module.VegaLite2);
       this.props.addTransform(module.VegaLite3);
+      this.props.addTransform(module.VegaLite4);
       this.props.addTransform(module.Vega2);
       this.props.addTransform(module.Vega3);
       this.props.addTransform(module.Vega4);

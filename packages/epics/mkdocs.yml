@@ -1,0 +1,8 @@
+site_name: nteract/epics
+
+nav:
+  - Overview: "overview.md"
+  - Comms Epics: "comms.md"
+  - Contents Epics: "contents.md"
+  - Execution Epics: "execute.md"
+  - Kernel Epics: "kernels.md"

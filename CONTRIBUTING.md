@@ -5,7 +5,7 @@ dinner, but most importantly: read it thoroughly!
 
 ## What do I need to know to help?
 
-### JavaScript side
+### The JavaScript/TypeScript
 
 You'll need knowledge of JavaScript (ES6), React, RxJS, Redux, and TypeScript to
 help out with this project. That's a whole lot of cool stuff! But don't worry,
@@ -37,7 +37,7 @@ It's best to use the latest LTS version of [NodeJS](https://nodejs.org) (current
 user agent. Please check the NodeJS website linked previously](https://img.shields.io/npm/v/node/lts.svg?label=)).
 Some dependencies can break when using newer releases.
 
-To manage multiple versions of NodeJS, take a look at the [n Package](https://www.npmjs.com/package/n). You 
+To manage multiple versions of NodeJS, take a look at the [n Package](https://www.npmjs.com/package/n). You
 can switch to the latest LTS version using:
 
 ```
@@ -58,14 +58,18 @@ in the nteract world? Here's a quick rundown!
 $ git clone https://github.com/github-username/repository-name.git
 ```
 
-5.  Install the dependencies required for the project by running `yarn`.
+5.  `cd` into your new clone and run the following scripts:
+
+- `yarn install` or just `yarn` to install dependencies
+- `yarn build:all` to compile typescript
+
 6.  Create a new branch for your fix using:
 
 ```
 $ git checkout -b branch-name-here
 ```
 
-7.  Make the appropriate changes for the issue you are trying to address or the feature that you want to add.
+7.  Make the appropriate changes for the issue you are trying to address or the feature that you want to add. Validate your changes by following the steps in the "How do I validate my changes" segment below.
 8.  Confirm that unit tests still pass successfully with:
 
 ```
@@ -88,6 +92,32 @@ $ git push origin branch-name-here
 15. Make changes to the pull request if the reviewing maintainer recommends them.
 16. Celebrate your success after your pull request is merged! :tada:
 
+## How do I validate my changes to nteract?
+
+### Validating in the nteract desktop app
+
+In addition to writing tests, you will want to validate your changes by testing them in the nteract desktop and web applications. These applications are a great test harness for manual tests and QA. To set up the nteract desktop application for development, follow the steps below.
+
+1. Ensure that you have installed the monorepo dependencies by running `yarn` in the root directory.
+2. Open a terminal window and run the following command. This will start a progressive build of the nteract desktop app. Whenever you make a code change, the build will automagically update.
+
+```
+$ yarn build:desktop:watch
+```
+
+3. In a separate window, run the following command. This will spawn the Electron app running the desktop app.
+
+```
+$ yarn spawn
+```
+
+You will need to reload the nteract page to fetch the latest changes from the build. You can do so by clicking `View > Reload` in the menu.
+
+**Helpful Tip:** You can enter the debugger in the Electron app by placing a `debugger;` statement in the desired location in your source code.
+
+### Validating in the nteract web app
+
+The nteract web app is a great place to validate changes made to the nteract source that affect interactions with a Jupyter server. To setup the nteract web app for development, please follow the instructions in [its README](./applications/jupyter-extension).
 
 ## How should I write my commit messages and PR titles?
 
@@ -135,8 +165,7 @@ _Source: http://git-scm.com/book/ch5-2.html_
 
 ### DON'T
 
-- Don't end the summary line with a period - it's a title and titles don't end
-  with a period.
+- Don't end the summary line with a period.
 
 ### Tips
 

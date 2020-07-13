@@ -3,22 +3,22 @@ import { AppState } from "@nteract/types";
 /**
  * Returns the Jupyter comms data for a given nteract application.
  */
-export const comms = (state: AppState) => state.comms;
+export const comms = (state: AppState) => state.core.entities.comms;
 
 /**
  * Returns the comms models that are stored in the nteract application state.
  */
-export const models = (state: AppState) => state.comms.models;
+export const models = (state: AppState) => state.core.entities.comms.models;
 
 /**
  * Returns the registered comm targets that are stored in the nteract application state.
  */
-export const targets = (state: AppState) => state.comms.targets;
+export const targets = (state: AppState) => state.core.entities.comms.targets;
 
 /**
  * Returns the information associated with currently registered comms.
  */
-export const info = (state: AppState) => state.comms.info;
+export const info = (state: AppState) => state.core.entities.comms.info;
 
 /**
  * Returns the model associated with a comm at a certain id.
@@ -27,7 +27,7 @@ export const info = (state: AppState) => state.comms.info;
  * @param { commId }  The commId to get info for
  */
 export const modelById = (state: AppState, { commId }: { commId: string }) =>
-  state.comms.models.get(commId);
+  state.core.entities.comms.models.get(commId);
 
 /**
  * Returns the handler associated with a comm target at a certain id.
@@ -36,7 +36,7 @@ export const modelById = (state: AppState, { commId }: { commId: string }) =>
  * @param { commId }  The commId to get target for
  */
 export const targetById = (state: AppState, { commId }: { commId: string }) =>
-  state.comms.targets.get(commId);
+  state.core.entities.comms.targets.get(commId);
 
 /**
  * Returns the information associated with a comm registered at a certain id.
@@ -45,4 +45,4 @@ export const targetById = (state: AppState, { commId }: { commId: string }) =>
  * @param { commId }  The commId to get info for
  */
 export const infoById = (state: AppState, { commId }: { commId: string }) =>
-  state.comms.info.get(commId);
+  state.core.entities.comms.info.get(commId);

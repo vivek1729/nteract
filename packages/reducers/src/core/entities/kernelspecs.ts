@@ -9,7 +9,7 @@ import { List, Map } from "immutable";
 import { Action, Reducer } from "redux";
 import { combineReducers } from "redux-immutable";
 
-const byRef = (state = Map(), action: Action): Map<{}, {}> => {
+export const byRef = (state = Map(), action: Action): Map<unknown, unknown> => {
   const typedAction = action as actionTypes.FetchKernelspecsFulfilled;
   switch (action.type) {
     case actionTypes.FETCH_KERNELSPECS_FULFILLED:
@@ -31,7 +31,7 @@ const byRef = (state = Map(), action: Action): Map<{}, {}> => {
   }
 };
 
-const refs = (state = List(), action: Action): List<any> => {
+export const refs = (state = List(), action: Action): List<any> => {
   let typedAction;
   switch (action.type) {
     case actionTypes.FETCH_KERNELSPECS_FULFILLED:
@@ -46,7 +46,7 @@ const refs = (state = List(), action: Action): List<any> => {
 
 export const kernelspecs: Reducer<
   {
-    byRef: Map<{}, {}>;
+    byRef: Map<unknown, unknown>;
     refs: List<any>;
   },
   Action<any>

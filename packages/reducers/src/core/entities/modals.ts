@@ -4,7 +4,7 @@ import { makeModalsRecord } from "@nteract/types";
 import { Action, Reducer } from "redux";
 import { combineReducers } from "redux-immutable";
 
-const modalType = (
+export const modalType = (
   state: string = "",
   action: actions.OpenModal | actions.CloseModal
 ): string => {

@@ -1,3 +1,3 @@
-import NotebookApp from "./notebook-app";
+import NotebookApp from "./notebook-apps/with-helmet";
 
 export default NotebookApp;

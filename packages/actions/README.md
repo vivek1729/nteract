@@ -38,7 +38,7 @@ export default function myReducer(
 
 ## Documentation
 
-You can view the reference documentation for `@nteract/actions` in the [package docs](https://packages.nteract.io/modules/actions).
+You can view the reference documentation for `@nteract/actions` in the [package docs](https://packages.nteract.io/modules/actions.html).
 
 ## Support
 

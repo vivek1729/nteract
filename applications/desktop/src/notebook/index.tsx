@@ -2,40 +2,12 @@
  * Main entry point for the desktop notebook UI
  */
 
-import * as MathJax from "@nteract/mathjax";
-
 import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/select/lib/css/blueprint-select.css";
 
-import "codemirror/addon/hint/show-hint.css";
-import "codemirror/lib/codemirror.css";
-
-import "@nteract/styles/app.css";
-import "@nteract/styles/global-variables.css";
-
-import "@nteract/styles/editor-overrides.css";
-
-import { CodeMirrorCSS, ShowHintCSS } from "@nteract/editor";
-
-import DataExplorer from "@nteract/data-explorer";
-import WidgetDisplay from "@nteract/jupyter-widgets";
-import GeoJSONTransform from "@nteract/transform-geojson";
-import ModelDebug from "@nteract/transform-model-debug";
-import PlotlyTransform from "@nteract/transform-plotly";
-import VDOMDisplay from "@nteract/transform-vdom";
-import { Vega2, Vega3, Vega4, Vega5, VegaLite1, VegaLite2, VegaLite3 } from "@nteract/transform-vega";
-
-import { ipcRenderer as ipc, remote } from "electron";
-import { mathJaxPath } from "mathjax-electron";
-import * as React from "react";
-import ReactDOM from "react-dom";
-import NotificationSystem, {
-  System as ReactNotificationSystem
-} from "react-notification-system";
-import { Provider } from "react-redux";
+import "symbol-observable";
 
 import {
-  actions,
   ContentRecord,
   ContentRef,
   createContentRef,
@@ -46,12 +18,51 @@ import {
   makeLocalHostRecord,
   makeNotebookContentRecord,
   makeStateRecord,
-  makeTransformsRecord
+  makeTransformsRecord,
 } from "@nteract/core";
+
+import DataExplorer from "@nteract/data-explorer";
+import WidgetDisplay from "@nteract/jupyter-widgets";
+import * as MathJax from "@nteract/mathjax";
+import { allConfigOptions } from "@nteract/mythic-configuration";
 import NotebookApp from "@nteract/notebook-app-component";
 import { Media } from "@nteract/outputs";
 
+import "@nteract/styles/app.css";
+
+import "@nteract/styles/global-variables.css";
+
+import "@nteract/styles/sidebar.css";
+import "@nteract/styles/themes/base.css";
+import "@nteract/styles/themes/default.css";
+import "@nteract/styles/toggle-switch.css";
+
+import "@nteract/styles/toolbar.css";
+import GeoJSONTransform from "@nteract/transform-geojson";
+import ModelDebug from "@nteract/transform-model-debug";
+import PlotlyTransform from "@nteract/transform-plotly";
+import VDOMDisplay from "@nteract/transform-vdom";
+import {
+  Vega2,
+  Vega3,
+  Vega4,
+  Vega5,
+  VegaLite1,
+  VegaLite2,
+  VegaLite3,
+  VegaLite4,
+} from "@nteract/transform-vega";
+
+import "codemirror/addon/hint/show-hint.css";
+import "codemirror/lib/codemirror.css";
+
+import { ipcRenderer as ipc, remote } from "electron";
+
 import * as Immutable from "immutable";
+import { mathJaxPath } from "mathjax-electron";
+import React from "react";
+import ReactDOM from "react-dom";
+import { Provider } from "react-redux";
 
 import { initGlobalHandlers } from "./global-events";
 import { initMenuHandlers } from "./menu";
@@ -61,6 +72,12 @@ import configureStore, { DesktopStore } from "./store";
 
 // Load the nteract fonts
 import("./fonts");
+
+import "@nteract/styles/cell-menu.css";
+import "@nteract/styles/command-palette.css";
+
+// Needs to be last
+import "@nteract/styles/editor-overrides.css";
 
 const contentRef = createContentRef();
 
@@ -72,16 +89,13 @@ const initialRefs = Immutable.Map<ContentRef, ContentRecord>().set(
 const store = configureStore({
   app: makeAppRecord({
     host: makeLocalHostRecord(),
-    version: remote.app.getVersion()
-  }),
-  comms: makeCommsRecord(),
-  config: Immutable.Map({
-    theme: "light"
+    version: remote.app.getVersion(),
   }),
   core: makeStateRecord({
     entities: makeEntitiesRecord({
+      comms: makeCommsRecord(),
       contents: makeContentsRecord({
-        byRef: initialRefs
+        byRef: initialRefs,
       }),
       transforms: makeTransformsRecord({
         displayOrder: Immutable.List([
@@ -90,6 +104,7 @@ const store = configureStore({
           "application/vnd.vega.v4+json",
           "application/vnd.vega.v3+json",
           "application/vnd.vega.v2+json",
+          "application/vnd.vegalite.v4+json",
           "application/vnd.vegalite.v3+json",
           "application/vnd.vegalite.v2+json",
           "application/vnd.vegalite.v1+json",
@@ -108,7 +123,7 @@ const store = configureStore({
           "image/gif",
           "image/png",
           "image/jpeg",
-          "text/plain"
+          "text/plain",
         ]),
         byId: Immutable.Map({
           "text/vnd.plotly.v1+html": PlotlyTransform,
@@ -120,6 +135,7 @@ const store = configureStore({
           "application/vnd.vegalite.v1+json": VegaLite1,
           "application/vnd.vegalite.v2+json": VegaLite2,
           "application/vnd.vegalite.v3+json": VegaLite3,
+          "application/vnd.vegalite.v4+json": VegaLite4,
           "application/vnd.vega.v2+json": Vega2,
           "application/vnd.vega.v3+json": Vega3,
           "application/vnd.vega.v4+json": Vega4,
@@ -134,12 +150,12 @@ const store = configureStore({
           "image/gif": Media.Image,
           "image/png": Media.Image,
           "image/jpeg": Media.Image,
-          "text/plain": Media.Plain
-        })
-      })
-    })
+          "text/plain": Media.Plain,
+        }),
+      }),
+    }),
   }),
-  desktopNotebook: makeDesktopNotebookRecord()
+  desktopNotebook: makeDesktopNotebookRecord(),
 });
 
 // Register for debugging
@@ -155,36 +171,29 @@ initMenuHandlers(contentRef, store);
 initGlobalHandlers(contentRef, store);
 
 export default class App extends React.PureComponent {
-  notificationSystem!: ReactNotificationSystem;
-
   componentDidMount(): void {
-    store.dispatch(actions.setNotificationSystem(this.notificationSystem));
     ipc.send("react-ready");
   }
 
-  render() {
+  render(): JSX.Element {
     return (
-      <React.Fragment>
+      <Provider store={store}>
         <MathJax.Provider src={mathJaxPath} input="tex">
-          <Provider store={store}>
-            <NotebookApp
-              // The desktop app always keeps the same contentRef in a
-              // browser window
-              contentRef={contentRef}
-            />
-          </Provider>
+          <NotebookApp
+            // The desktop app always keeps the same contentRef in a
+            // browser window
+            contentRef={contentRef}
+          />
         </MathJax.Provider>
-        <NotificationSystem
-          ref={(notificationSystem: ReactNotificationSystem) => {
-            this.notificationSystem = notificationSystem;
-          }}
-        />
-      </React.Fragment>
+      </Provider>
     );
   }
 }
 
+ipc.send("transfer-config-options-to-main", allConfigOptions());
+
 const app = document.querySelector("#app");
+
 if (app) {
   ReactDOM.render(<App />, app);
 } else {

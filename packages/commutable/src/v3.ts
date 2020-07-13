@@ -14,7 +14,7 @@ import {
   MultiLineString
 } from "./primitives";
 
-import { makeNotebookRecord } from "./notebook";
+import { makeNotebookRecord } from "./structures";
 
 import {
   CodeCellParams,

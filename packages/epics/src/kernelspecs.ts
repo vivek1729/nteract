@@ -1,15 +1,13 @@
-import { ofType } from "redux-observable";
-import { ActionsObservable } from "redux-observable";
-import { kernelspecs } from "rx-jupyter";
-import { empty, of } from "rxjs";
-import { catchError, map, mergeMap } from "rxjs/operators";
-
 import * as actions from "@nteract/actions";
 import * as selectors from "@nteract/selectors";
 import { KernelspecProps, ServerConfig } from "@nteract/types";
+import { ofType } from "redux-observable";
+import { kernelspecs } from "rx-jupyter";
+import { EMPTY, Observable, of } from "rxjs";
+import { catchError, map, mergeMap } from "rxjs/operators";
 
 export const fetchKernelspecsEpic = (
-  action$: ActionsObservable<actions.FetchKernelspecs>,
+  action$: Observable<actions.FetchKernelspecs>,
   state$: any
 ) =>
   action$.pipe(
@@ -23,7 +21,7 @@ export const fetchKernelspecsEpic = (
       const host = selectors.currentHost(state);
       if (host.type !== "jupyter") {
         // Dismiss any usage that isn't targeting a jupyter server
-        return empty();
+        return EMPTY;
       }
       const serverConfig: ServerConfig = selectors.serverConfig(host);
 

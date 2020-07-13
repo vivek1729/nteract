@@ -1,40 +1,15 @@
 /* eslint-disable no-plusplus */
 
-import {
-  appendCellToNotebook,
-  emptyCodeCell,
-  emptyMarkdownCell,
-  emptyNotebook,
-  ImmutableNotebook,
-  JSONObject,
-  monocellNotebook
-} from "@nteract/commutable";
+import { appendCellToNotebook, emptyCodeCell, emptyMarkdownCell, emptyNotebook, ImmutableNotebook, JSONObject, monocellNotebook } from "@nteract/commutable";
+import { core } from "@nteract/reducers";
+import { AppState, createContentRef, createKernelRef, makeAppRecord, makeCommsRecord, makeContentsRecord, makeDocumentRecord, makeEntitiesRecord, makeKernelsRecord, makeNotebookContentRecord, makeRemoteKernelRecord, makeStateRecord } from "@nteract/types";
 import * as Immutable from "immutable";
-import { combineReducers, createStore } from "redux";
+import { combineReducers, createStore, Store } from "redux";
 import { Subject } from "rxjs";
-
-import { comms, config, core } from "@nteract/reducers";
-import {
-  AppState,
-  createContentRef,
-  createKernelRef,
-  makeAppRecord,
-  makeCommsRecord,
-  makeContentsRecord,
-  makeDocumentRecord,
-  makeEntitiesRecord,
-  makeKernelsRecord,
-  makeNotebookContentRecord,
-  makeRemoteKernelRecord,
-  makeStateRecord
-} from "@nteract/types";
-
 export { fixtureCommutable, fixture, fixtureJSON } from "./fixture-nb";
 
 const rootReducer = combineReducers({
   app: (state = makeAppRecord()) => state,
-  comms,
-  config,
   core
 });
 
@@ -43,7 +18,8 @@ function hideCells(notebook: ImmutableNotebook) {
     notebook
       .get("cellOrder", Immutable.List())
       .reduce(
-        (acc, id) => acc.setIn([id, "metadata", "inputHidden"], true),
+        (acc, id) =>
+          acc.setIn([id, "metadata", "jupyter", "source_hidden"], true),
         cells
       )
   );
@@ -104,6 +80,7 @@ export const mockAppState = (config: JSONObject): AppState => {
     core: makeStateRecord({
       kernelRef,
       entities: makeEntitiesRecord({
+        comms: makeCommsRecord(),
         contents: makeContentsRecord({
           byRef: Immutable.Map({
             [contentRef]: makeNotebookContentRecord({
@@ -117,7 +94,8 @@ export const mockAppState = (config: JSONObject): AppState => {
                 cellFocused:
                   config && config.codeCellCount && config.codeCellCount > 1
                     ? dummyNotebook.get("cellOrder", Immutable.List()).get(1)
-                    : null
+                    : null,
+                kernelRef
               }),
               filepath:
                 config && config.noFilename ? "" : "dummy-store-nb.ipynb"
@@ -127,6 +105,7 @@ export const mockAppState = (config: JSONObject): AppState => {
         kernels: makeKernelsRecord({
           byRef: Immutable.Map({
             [kernelRef]: makeRemoteKernelRecord({
+              sessionId: "aSessionId",
               channels,
               status: "not connected"
             })
@@ -135,19 +114,12 @@ export const mockAppState = (config: JSONObject): AppState => {
       })
     }),
     app: makeAppRecord({
-      notificationSystem: {
-        addNotification: () => {} // most of the time you'll want to mock this
-      },
-      githubToken: "TOKEN"
-    }),
-    config: Immutable.Map({
-      theme: "light"
-    }),
-    comms: makeCommsRecord()
+      githubToken: "TOKEN",
+    })
   };
 };
 
-export function fixtureStore(config: JSONObject) {
+export function fixtureStore(config: JSONObject): Store {
   const initialAppState = mockAppState(config);
 
   return createStore(rootReducer, initialAppState as any);

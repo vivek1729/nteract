@@ -3,6 +3,7 @@ import * as actionTypes from "@nteract/actions";
 import { JSONObject } from "@nteract/commutable";
 import {
   HelpLink,
+  KernelStatus,
   makeHelpLinkRecord,
   makeKernelInfoRecord,
   makeKernelNotStartedRecord,
@@ -14,10 +15,7 @@ import { List, Map } from "immutable";
 import { Action, Reducer } from "redux";
 import { combineReducers } from "redux-immutable";
 
-// TODO: we need to clean up references to old kernels at some point. Listening
-// for KILL_KERNEL_SUCCESSFUL seems like a good candidate, but I think you can
-// also end up with a dead kernel if that fails and you hit KILL_KERNEL_FAILED.
-const byRef = (state = Map(), action: Action): Map<{}, {}> => {
+const byRef = (state = Map(), action: Action): Map<unknown, unknown> => {
   let typedAction;
   switch (action.type) {
     case actionTypes.SET_LANGUAGE_INFO:
@@ -25,7 +23,10 @@ const byRef = (state = Map(), action: Action): Map<{}, {}> => {
       return state;
     case actionTypes.KILL_KERNEL_SUCCESSFUL:
       typedAction = action as actionTypes.KillKernelSuccessful;
-      return state.setIn([typedAction.payload.kernelRef, "status"], "killed");
+      return state.setIn(
+        [typedAction.payload.kernelRef, "status"],
+        KernelStatus.Killed
+      );
     case actionTypes.KILL_KERNEL_FAILED:
       typedAction = action as actionTypes.KillKernelFailed;
       return state.setIn(
@@ -120,6 +121,10 @@ const byRef = (state = Map(), action: Action): Map<{}, {}> => {
             `Unrecognized kernel type in kernel ${typedAction.payload.kernel}.`
           );
       }
+    case actionTypes.DISPOSE_KERNEL: {
+      typedAction = action as actionTypes.DisposeKernel;
+      return state.delete(typedAction.payload.kernelRef);
+    }
     default:
       return state;
   }
@@ -127,7 +132,7 @@ const byRef = (state = Map(), action: Action): Map<{}, {}> => {
 
 export const kernels: Reducer<
   {
-    byRef: Map<{}, {}>;
+    byRef: Map<unknown, unknown>;
   },
   Action<any>
 > = combineReducers({ byRef }, makeKernelsRecord as any);

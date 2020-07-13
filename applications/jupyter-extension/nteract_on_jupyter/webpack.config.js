@@ -52,6 +52,10 @@ module.exports = {
         use: "file-loader"
       },
       {
+        test: /\.ttf$/,
+        use: ["file-loader"]
+      },
+      {
         test: /\.tsx?$/,
         use: [
           {

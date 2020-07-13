@@ -16,24 +16,6 @@ const byRef = (
 ): Map<string, HostRecord> => {
   let typedAction;
   switch (action.type) {
-    case actions.PUBLISH_TO_BOOKSTORE:
-      // This is more of a pass thru. This action
-      // kicks off an epic saves a `notebook` to the contents
-      // API. It then returns an action that saves
-      // the notebook to `Bookstore`.
-      return state;
-    case actions.PUBLISH_TO_BOOKSTORE_AFTER_SAVE:
-      // This action kicks off an epic which establishes
-      // a connection to bookstore and saves a `notebook`
-      // to the appropriate S3 bucket.
-      return state;
-    case actions.PUBLISH_TO_BOOKSTORE_SUCCEEDED:
-      // This action signfies that the content was saved
-      // to `Bookstore` successfully.
-      // TODO: Add last saved timestamp for published bookstore content
-      return state;
-    case actions.PUBLISH_TO_BOOKSTORE_FAILED:
-      return state;
     case actions.ADD_HOST:
       typedAction = action as actions.AddHost;
       switch (typedAction.payload.host.type) {

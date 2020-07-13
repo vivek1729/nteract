@@ -28,7 +28,7 @@ const message = createMessage("inspect_request", {
 
 ## Documentation
 
-You can view the reference documentation for `@nteract/messaging` in the [package docs](https://packages.nteract.io/modules/messaging).
+You can view the reference documentation for `@nteract/messaging` in the [package docs](https://packages.nteract.io/modules/messaging.html).
 
 ## Support
 

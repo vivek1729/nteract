@@ -15,13 +15,12 @@ import {
   JupyterConnectionInfo
 } from "enchannel-zmq-backend";
 import * as jmp from "jmp";
-import { sample } from "lodash";
-import { ActionsObservable, ofType, StateObservable } from "redux-observable";
+import sample from "lodash.sample";
+import { ofType, StateObservable } from "redux-observable";
 import { empty, merge, Observable, of, Subscriber } from "rxjs";
 import {
   catchError,
   concatMap,
-  filter,
   first,
   map,
   mergeMap,
@@ -52,7 +51,8 @@ export function launchKernelObservable(
   kernelSpec: KernelspecInfo,
   cwd: string,
   kernelRef: KernelRef,
-  contentRef: ContentRef
+  contentRef: ContentRef,
+  state: AppState
 ): Observable<Actions> {
   const spec = kernelSpec.spec;
 
@@ -93,12 +93,12 @@ export function launchKernelObservable(
             "color: black"
           );
 
-          spawn.stdout.on("data", data => {
+          spawn.stdout?.on("data", data => {
             const text = data.toString();
             logStd(text);
             observer.next(actions.kernelRawStdout({ text, kernelRef }));
           });
-          spawn.stderr.on("data", data => {
+          spawn.stderr?.on("data", data => {
             const text = data.toString();
             logStd(text);
             observer.next(actions.kernelRawStderr({ text, kernelRef }));
@@ -112,12 +112,17 @@ export function launchKernelObservable(
             undefined,
             jmp
           );
-          observer.next(
-            actions.setKernelspecInfo({
-              contentRef,
-              kernelInfo: kernelSpec
-            })
-          );
+          const kernelInfo = selectors.kernelspecByName(state, {
+            name: kernelSpec.name
+          });
+          if (kernelInfo) {
+            observer.next(
+              actions.setKernelMetadata({
+                contentRef,
+                kernelInfo
+              })
+            );
+          }
 
           const kernel: LocalKernelProps = {
             info: null,
@@ -168,7 +173,7 @@ export const kernelSpecsObservable: Observable<Kernelspecs> = new Observable<
 });
 
 export const launchKernelByNameEpic = (
-  action$: ActionsObservable<actions.LaunchKernelByNameAction>
+  action$: Observable<actions.LaunchKernelByNameAction>
 ): Observable<Actions> =>
   action$.pipe(
     ofType(actions.LAUNCH_KERNEL_BY_NAME),
@@ -180,7 +185,7 @@ export const launchKernelByNameEpic = (
     mergeMap((action: actions.LaunchKernelByNameAction) =>
       kernelSpecsObservable.pipe(
         map(specs => {
-          const kernelSpec = specs[action.payload.kernelSpecName];
+          const kernelSpec = specs[action.payload.kernelSpecName!];
           if (kernelSpec) {
             // Defer to a launchKernel action to _actually_ launch
             return actions.launchKernel({
@@ -214,7 +219,7 @@ type LaunchKernelResponseActions =
  * @param  {ActionObservable} action$  ActionObservable for LAUNCH_KERNEL action
  */
 export const launchKernelEpic = (
-  action$: ActionsObservable<actions.LaunchKernelAction>,
+  action$: Observable<actions.LaunchKernelAction>,
   state$: StateObservable<AppState>
 ): Observable<Actions> => {
   const response$ = action$.pipe(
@@ -257,7 +262,8 @@ export const launchKernelEpic = (
           action.payload.kernelSpec,
           action.payload.cwd,
           action.payload.kernelRef,
-          action.payload.contentRef
+          action.payload.contentRef,
+          state$.value
         ),
         // Was there a kernel before (?) -- kill it if so, otherwise nothing else
         cleanupOldKernel$
@@ -287,15 +293,11 @@ type InterruptActions =
   | actions.InterruptKernelSuccessful;
 
 export const interruptKernelEpic = (
-  action$: ActionsObservable<actions.InterruptKernel>,
+  action$: Observable<actions.InterruptKernel>,
   state$: StateObservable<AppState>
 ): Observable<InterruptActions> =>
   action$.pipe(
     ofType(actions.INTERRUPT_KERNEL),
-    // This epic can only interrupt direct zeromq connected kernels
-    filter(() => selectors.isCurrentKernelZeroMQ(state$.value)),
-    // If the user fires off _more_ interrupts, we shouldn't interrupt the in-flight
-    // interrupt, instead doing it after the last one happens
     concatMap(
       (action: actions.InterruptKernel): Observable<InterruptActions> => {
         const { contentRef } = action.payload;
@@ -339,7 +341,8 @@ export const interruptKernelEpic = (
 
         return of(
           actions.interruptKernelSuccessful({
-            kernelRef: action.payload.kernelRef
+            kernelRef: action.payload.kernelRef,
+            contentRef
           })
         );
       }
@@ -352,8 +355,8 @@ function killSpawn(spawn: ChildProcess): void {
   if (spawn.stdin && spawn.stdin.destroy) {
     spawn.stdin.destroy();
   }
-  spawn.stdout.destroy();
-  spawn.stderr.destroy();
+  spawn.stdout?.destroy();
+  spawn.stderr?.destroy();
 
   // Kill the process fully
   spawn.kill("SIGKILL");
@@ -363,7 +366,7 @@ function killSpawn(spawn: ChildProcess): void {
 // shutdown by sending a shutdown msg to the kernel, and only if the kernel
 // doesn't respond promptly does it SIGKILL the kernel.
 export const killKernelEpic = (
-  action$: ActionsObservable<actions.KillKernelAction>,
+  action$: Observable<actions.KillKernelAction>,
   state$: StateObservable<AppState>
 ): Observable<Actions> =>
   action$.pipe(
@@ -404,7 +407,7 @@ export const killKernelEpic = (
         // If we don't get a response within 2s, assume failure :(
         timeout(1000 * 2),
         catchError(err =>
-          of(actions.shutdownReplyTimedOut({ error: err, kernelRef }))
+          of(actions.shutdownReplyTimedOut({ kernelRef }))
         ),
         mergeMap(resultingAction => {
           // End all communication on the channels
@@ -445,10 +448,10 @@ export const killKernelEpic = (
         return subscription;
       });
     })
-  );
+  ) as Observable<Actions>;
 
 export function watchSpawn(
-  action$: ActionsObservable<actions.NewKernelAction>
+  action$: Observable<actions.NewKernelAction>
 ) {
   return action$.pipe(
     ofType(actions.LAUNCH_KERNEL_SUCCESSFUL),

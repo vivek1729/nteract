@@ -1,6 +1,6 @@
 {
   "name": "@nteract/styles",
-  "version": "2.0.2",
+  "version": "2.2.0",
   "description": "css for use in nteract apps",
   "main": "index.js",
   "types": "index.d.ts",
@@ -8,7 +8,13 @@
   "files": [
     "app.css",
     "editor-overrides.css",
-    "global-variables.css"
+    "global-variables.css",
+    "toggle-switch.css",
+    "themes",
+    "markdown",
+    "cell-menu",
+    "command-palette.css",
+    "toolbar.css"
   ],
   "scripts": {},
   "publishConfig": {

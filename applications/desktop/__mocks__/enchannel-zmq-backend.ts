@@ -1,4 +1,4 @@
-import { createMainChannelFromSockets } from "enchannel-zmq-backend/src";
+import { createMainChannelFromSockets } from "enchannel-zmq-backend";
 
 const EventEmitter = require("events");
 
@@ -17,14 +17,14 @@ module.exports = {
     const iopubSocket = new HokeySocket();
     const sockets = {
       shell: shellSocket,
-      iopub: iopubSocket
+      iopub: iopubSocket,
     };
 
     const channels = await createMainChannelFromSockets(sockets, {
       session: "spinning",
-      username: "dj"
+      username: "dj",
     });
 
     return channels;
-  }
+  },
 };

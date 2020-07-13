@@ -1,26 +1,55 @@
 import * as Immutable from "immutable";
-import { ActionsObservable, StateObservable } from "redux-observable";
-import { Subject } from "rxjs";
+import { StateObservable } from "redux-observable";
+import { Subject, of } from "rxjs";
 import { toArray } from "rxjs/operators";
 
 import * as actions from "@nteract/actions";
 import * as stateModule from "@nteract/types";
-
+import { mockAppState } from "@nteract/fixtures";
 import * as coreEpics from "../src";
+
+jest.mock("rx-jupyter", () => ({
+  sessions: {
+    update: (severConfig, sessionid, sessionPayload) => {
+      return of({ response: { kernel: { id: "test" } } });
+    },
+    create: (serverConfig, sessionPayload) => {
+      return of({ response: { id: "test", kernel: { id: "test" } } });
+    },
+    destroy: (serverConfig, sessionId) => {
+      return of({ response: {} });
+    }
+  },
+  kernels: {
+    start: (serverConfig, kernelSpecName, cwd) => {
+      return of({ response: { id: "test", kernel: { id: "test" } } });
+    },
+    restart: (serverConfig, id) => {
+      return of({ status: 200, response: {} });
+    },
+    interrupt: (serverConfig, id) => {
+      return of({ response: {} });
+    },
+    connect: (serverConfig, kernelId, sessionId) => {
+      return new Subject();
+    }
+  }
+}));
 
 describe("launchWebSocketKernelEpic", () => {
   test("launches remote kernels", async () => {
     const contentRef = "fakeContentRef";
     const kernelRef = "fake";
     const hostRef = "fakeHostRef";
+    const closeObserver = { next: () => {} }
     const value = {
       app: stateModule.makeAppRecord({
         host: stateModule.makeJupyterHostRecord({
           type: "jupyter",
           token: "eh",
-          basePath: "http://localhost:8888/"
+          basePath: "http://localhost:8888/",
+          closeObserver
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({}),
@@ -47,7 +76,8 @@ describe("launchWebSocketKernelEpic", () => {
               [hostRef]: stateModule.makeJupyterHostRecord({
                 type: "jupyter",
                 token: "eh",
-                basePath: "http://localhost:8888/"
+                basePath: "http://localhost:8888/",
+                closeObserver
               })
             })
           })
@@ -58,7 +88,7 @@ describe("launchWebSocketKernelEpic", () => {
       new Subject<stateModule.AppState>(),
       value
     );
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.launchKernelByName({
         contentRef,
         kernelRef,
@@ -82,13 +112,14 @@ describe("launchWebSocketKernelEpic", () => {
           selectNextKernel: true,
           kernel: {
             info: null,
-            sessionId: "1",
+            sessionId: "test",
             hostRef,
             type: "websocket",
             channels: expect.any(Subject),
             kernelSpecName: "fancy",
             cwd: "/",
-            id: "0"
+            id: "test",
+            status: undefined
           }
         }
       }
@@ -120,12 +151,11 @@ describe("interruptKernelEpic", () => {
           token: "eh",
           basePath: "http://localhost:8888/"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.interruptKernel({ kernelRef: "fake" })
     );
 
@@ -172,12 +202,11 @@ describe("interruptKernelEpic", () => {
           token: "eh",
           basePath: "http://localhost:8888/"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.interruptKernel({ contentRef: "contentRef" })
     );
 
@@ -189,7 +218,7 @@ describe("interruptKernelEpic", () => {
     expect(responseActions).toEqual([
       {
         type: "INTERRUPT_KERNEL_SUCCESSFUL",
-        payload: { kernelRef: undefined }
+        payload: { kernelRef: undefined, contentRef: "contentRef" }
       }
     ]);
   });
@@ -219,12 +248,11 @@ describe("restartKernelEpic", () => {
           token: "eh",
           basePath: "http://localhost:8888/"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.restartKernel({
         kernelRef: null,
         contentRef: "contentRef",
@@ -270,12 +298,11 @@ describe("restartKernelEpic", () => {
         host: stateModule.makeLocalHostRecord({
           type: "local"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.restartKernel({
         kernelRef: "fake",
         contentRef: "contentRef",
@@ -323,12 +350,11 @@ describe("restartKernelEpic", () => {
           token: "eh",
           basePath: "http://localhost:8888/"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.restartKernel({
         kernelRef: "fake",
         contentRef: "contentRef",
@@ -376,12 +402,11 @@ describe("restartKernelEpic", () => {
           token: "eh",
           basePath: "http://localhost:8888/"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.restartKernel({
         kernelRef: "fake",
         contentRef: "contentRef",
@@ -427,12 +452,11 @@ describe("restartKernelEpic", () => {
           token: "eh",
           basePath: "http://localhost:8888/"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.restartKernel({
         kernelRef: "fake",
         contentRef: "contentRef",
@@ -484,12 +508,11 @@ describe("restartKernelEpic", () => {
           token: "eh",
           basePath: "http://localhost:8888/"
         }),
-        notificationSystem: { addNotification: jest.fn() }
       }),
       comms: stateModule.makeCommsRecord(),
       config: Immutable.Map({})
     });
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actions.restartKernel({
         kernelRef: "fake",
         contentRef: "contentRef",
@@ -517,5 +540,180 @@ describe("restartKernelEpic", () => {
         }
       }
     ]);
+  });
+});
+
+describe("changeWebSocketKernelEpic", () => {
+  it("does nothing if the current host is not a Jupyter server", done => {
+    const state = mockAppState({});
+    const kernelRef: string = state.core.entities.kernels.byRef
+      .keySeq()
+      .first();
+    const contentRef: string = state.core.entities.contents.byRef
+      .keySeq()
+      .first();
+    const action$ = of(
+      actions.changeKernelByName({
+        kernelSpecName: "julia",
+        contentRef,
+        oldKernelRef: kernelRef
+      })
+    );
+    const state$ = new StateObservable<stateModule.AppState>(
+      new Subject(),
+      state
+    );
+    const obs = coreEpics.changeWebSocketKernelEpic(action$, state$);
+    obs.pipe(toArray()).subscribe(
+      actions => {
+        const types = actions.map(({ type }) => type);
+        expect(types).toEqual([]);
+      },
+      err => done.fail(err), // It should not error in the stream
+      () => done()
+    );
+  });
+  it("launches a new kernel when given valid details", done => {
+    const state = {
+      ...mockAppState({}),
+      app: stateModule.makeAppRecord({
+        host: stateModule.makeJupyterHostRecord({})
+      })
+    };
+    const kernelRef: string = state.core.entities.kernels.byRef
+      .keySeq()
+      .first();
+    const contentRef: string = state.core.entities.contents.byRef
+      .keySeq()
+      .first();
+    const action$ = of(
+      actions.changeKernelByName({
+        kernelSpecName: "julia",
+        contentRef,
+        oldKernelRef: kernelRef
+      })
+    );
+    const state$ = new StateObservable<stateModule.AppState>(
+      new Subject(),
+      state
+    );
+    const obs = coreEpics.changeWebSocketKernelEpic(action$, state$);
+    obs.pipe(toArray()).subscribe(
+      action => {
+        const types = action.map(({ type }) => type);
+        expect(types).toEqual([actions.LAUNCH_KERNEL_SUCCESSFUL]);
+      },
+      err => done.fail(err), // It should not error in the stream
+      () => done()
+    );
+  });
+});
+
+describe("killKernelEpic", () => {
+  it("it does nothing if the target host is not a Jupyter server", done => {
+    const state = {
+      ...mockAppState({}),
+      app: stateModule.makeAppRecord({
+        host: stateModule.makeLocalHostRecord({})
+      })
+    };
+    const kernelRef: string = state.core.entities.kernels.byRef
+      .keySeq()
+      .first();
+    const contentRef: string = state.core.entities.contents.byRef
+      .keySeq()
+      .first();
+    const action$ = of(
+      actions.killKernel({
+        contentRef,
+        kernelRef
+      })
+    );
+    const state$ = new StateObservable<stateModule.AppState>(
+      new Subject(),
+      state
+    );
+    const obs = coreEpics.killKernelEpic(action$, state$);
+    obs.pipe(toArray()).subscribe(
+      action => {
+        const types = action.map(({ type }) => type);
+        expect(types).toEqual([]);
+      },
+      err => done.fail(err),
+      () => done()
+    );
+  });
+  it("raises an error if there is no kernel for the content ref", done => {
+    const state = {
+      ...mockAppState({}),
+      app: stateModule.makeAppRecord({
+        host: stateModule.makeJupyterHostRecord({})
+      })
+    };
+    const action$ = of(
+      actions.killKernel({
+        contentRef: "none",
+        kernelRef: "none"
+      })
+    );
+    const state$ = new StateObservable<stateModule.AppState>(
+      new Subject(),
+      state
+    );
+    const obs = coreEpics.killKernelEpic(action$, state$);
+    obs.pipe(toArray()).subscribe(
+      action => {
+        const types = action.map(({ type }) => type);
+        expect(types).toEqual([actions.KILL_KERNEL_FAILED]);
+      },
+      err => done.fail(err),
+      () => done()
+    );
+  });
+  it("successfully kills a websocket kernel with valid details", done => {
+    const state = {
+      app: stateModule.makeAppRecord({
+        host: stateModule.makeJupyterHostRecord({})
+      }),
+      core: stateModule.makeStateRecord({
+        entities: stateModule.makeEntitiesRecord({
+          kernels: stateModule.makeKernelsRecord({
+            byRef: Immutable.Map({
+              aKernel: stateModule.makeRemoteKernelRecord({
+                id: "test",
+                sessionId: "test"
+              })
+            })
+          }),
+          contents: stateModule.makeContentsRecord({
+            byRef: Immutable.Map({
+              aContent: stateModule.makeNotebookContentRecord({
+                model: stateModule.makeDocumentRecord({ kernelRef: "aKernel" })
+              })
+            })
+          })
+        })
+      })
+    };
+    const action$ = of(
+      actions.killKernel({
+        contentRef: "aContent",
+        kernelRef: "aKernel"
+      })
+    );
+    const state$ = new StateObservable<stateModule.AppState>(
+      new Subject(),
+      state
+    );
+    const obs = coreEpics.killKernelEpic(action$, state$);
+    obs.pipe(toArray()).subscribe(
+      action => {
+        console.log(action);
+        const types = action.map(({ type }) => type);
+        expect(types).toEqual([actions.KILL_KERNEL_SUCCESSFUL]);
+      },
+      err => done.fail(err),
+      () => done()
+    );
   });
 });

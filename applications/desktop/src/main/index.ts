@@ -1,51 +1,26 @@
+import { ConfigurationOption, setConfigFile, defineConfigOption } from "@nteract/mythic-configuration";
+import { KernelspecInfo, Kernelspecs } from "@nteract/types";
+import { app, BrowserWindow, dialog, Event, ipcMain as ipc, Menu, Tray } from "electron";
+import initContextMenu from "electron-context-menu";
 import * as log from "electron-log";
 import { existsSync } from "fs";
+import { mkdirpObservable } from "fs-observable";
 import * as jupyterPaths from "jupyter-paths";
 import * as kernelspecs from "kernelspecs";
 import { join, resolve } from "path";
-import yargs from "yargs/yargs";
-
-import { KernelspecInfo, Kernelspecs } from "@nteract/types";
-
-import {
-  app,
-  BrowserWindow,
-  dialog,
-  Event,
-  ipcMain as ipc,
-  Menu,
-  Tray
-} from "electron";
-import {
-  mkdirpObservable,
-  readFileObservable,
-  writeFileObservable
-} from "fs-observable";
 import { forkJoin, fromEvent, Observable, Subscriber, zip } from "rxjs";
-import {
-  buffer,
-  catchError,
-  first,
-  mergeMap,
-  skipUntil,
-  takeUntil
-} from "rxjs/operators";
-
-import {
-  QUITTING_STATE_NOT_STARTED,
-  QUITTING_STATE_QUITTING,
-  setKernelSpecs,
-  setQuittingState
-} from "./actions";
+import { buffer, first, mergeMap, skipUntil, takeUntil } from "rxjs/operators";
+import yargs from "yargs/yargs";
+import { QUITTING_STATE_NOT_STARTED, QUITTING_STATE_QUITTING, setKernelSpecs, setQuittingState } from "./actions";
 import { initAutoUpdater } from "./auto-updater";
+import { defaultKernel } from "./config-options";
 import initializeKernelSpecs from "./kernel-specs";
 import { launch, launchNewNotebook } from "./launch";
 import { loadFullMenu, loadTrayMenu } from "./menu";
 import prepareEnv from "./prepare-env";
-
 import configureStore from "./store";
 
-const store = configureStore();
+const store = configureStore(undefined);
 
 // HACK: The main process store should not be stored in a global.
 (global as any).store = store;
@@ -56,7 +31,6 @@ const argv = yargs()
   .example("nteract notebook1.ipynb notebook2.ipynb", "Open notebooks")
   .example("nteract --kernel javascript", "Launch a kernel")
   .describe("kernel", "Launch a kernel")
-  .default("kernel", "python3")
   .alias("k", "kernel")
   .alias("v", "version")
   .alias("h", "help")
@@ -66,7 +40,12 @@ const argv = yargs()
 
 log.info("args", argv);
 
-const notebooks = argv._.filter(x => /(.ipynb)$/.test(x));
+const notebooks = argv._.filter((x) => /(.ipynb)$/.test(x));
+
+ipc.on("transfer-config-options-to-main",
+  (_event: any, options: ConfigurationOption[]) => {
+    options.forEach(each => defineConfigOption(each));
+  });
 
 ipc.on("new-kernel", (_event: any, k: KernelspecInfo) => {
   launchNewNotebook(null, k);
@@ -88,7 +67,7 @@ ipc.on("show-message-box", (event: Event, arg: any) => {
 
 app.on("ready", initAutoUpdater);
 
-const electronReady$ = new Observable(observer => {
+const electronReady$ = new Observable((observer) => {
   app.on("ready", (event: Event) => observer.next(event));
 });
 const windowReady$ = fromEvent(ipc, "react-ready");
@@ -98,32 +77,17 @@ const fullAppReady$ = zip(electronReady$, prepareEnv).pipe(first());
 const jupyterConfigDir = join(app.getPath("home"), ".jupyter");
 const nteractConfigFilename = join(jupyterConfigDir, "nteract.json");
 
+store.dispatch(setConfigFile(nteractConfigFilename));
+
 const prepJupyterObservable = prepareEnv.pipe(
   mergeMap(() =>
     // Create all the directories we need in parallel
     forkJoin(
       // Ensure the runtime Dir is setup for kernels
       mkdirpObservable(jupyterPaths.runtimeDir()),
-      // Ensure the config directory is all set up
-      mkdirpObservable(jupyterConfigDir)
+      // The config directory is taken care of by the configuration myths
     )
   ),
-  // Set up our configuration file
-  mergeMap(() =>
-    readFileObservable(nteractConfigFilename).pipe(
-      catchError(err => {
-        if (err.code === "ENOENT") {
-          return writeFileObservable(
-            nteractConfigFilename,
-            JSON.stringify({
-              theme: "light"
-            })
-          );
-        }
-        throw err;
-      })
-    )
-  )
 );
 
 const kernelSpecsPromise = prepJupyterObservable
@@ -149,7 +113,7 @@ export function createSplashSubscriber() {
         useContentSize: true,
         title: "loading",
         frame: false,
-        show: false
+        show: false,
       });
 
       const index = join(__dirname, "..", "static", "splash.html");
@@ -158,7 +122,7 @@ export function createSplashSubscriber() {
         win.show();
       });
     },
-    err => {
+    (err) => {
       console.error(err);
     },
     () => {
@@ -180,7 +144,7 @@ electronReady$
   .pipe(takeUntil(appAndKernelSpecsReady))
   .subscribe(createSplashSubscriber());
 
-app.on("before-quit", e => {
+app.on("before-quit", (e) => {
   // We use Electron's before-quit to give us a hook to into full app quit events,
   // such as Command+Q on macOS.
 
@@ -194,19 +158,19 @@ app.on("before-quit", e => {
   const windows = BrowserWindow.getAllWindows();
   if (
     // `win.close()` teardown is async, so `isVisible` is more reliable, see #3656
-    windows.filter(win => win.isVisible()).length > 0 &&
-    store.getState().get("quittingState") === QUITTING_STATE_NOT_STARTED
+    windows.filter((win) => win.isVisible()).length > 0 &&
+    store.getState().quittingState === QUITTING_STATE_NOT_STARTED
   ) {
     e.preventDefault();
     store.dispatch(setQuittingState(QUITTING_STATE_QUITTING));
 
     // Trigger each windows' closeNotebookEpic. If and when all windows are closed,
     // the window-all-closed event will fire and we will complete the quit action.
-    windows.forEach(win => win.close());
+    windows.forEach((win) => win.close());
   }
 });
 
-const windowAllClosed = new Observable(observer => {
+const windowAllClosed = new Observable((observer) => {
   app.on("window-all-closed", (event: Event) => observer.next(event));
 });
 
@@ -220,7 +184,7 @@ windowAllClosed.pipe(skipUntil(appAndKernelSpecsReady)).subscribe(() => {
   // - Quit when last window closed.
   if (
     process.platform !== "darwin" ||
-    store.getState().get("quittingState") === QUITTING_STATE_QUITTING
+    store.getState().quittingState === QUITTING_STATE_QUITTING
   ) {
     app.quit();
   }
@@ -238,7 +202,7 @@ const openFile$ = new Observable(
     const handler = (event: Event, filename: string) => {
       observer.next({
         event,
-        filename
+        filename,
       });
     };
     app.on(eventName, handler);
@@ -249,7 +213,7 @@ const openFile$ = new Observable(
 
 function openFileFromEvent({
   event,
-  filename
+  filename,
 }: {
   event: Event;
   filename: string;
@@ -262,10 +226,7 @@ function openFileFromEvent({
 // and macOS will send the open-file events early,
 // buffer those that come early.
 openFile$
-  .pipe(
-    buffer(fullAppReady$),
-    first()
-  )
+  .pipe(buffer(fullAppReady$), first())
   .subscribe((buffer: Array<{ filename: string; event: Event }>) => {
     // Form an array of open-file events from before app-ready // Should only be the first
     // Now we can choose whether to open the default notebook
@@ -273,17 +234,17 @@ openFile$
 
     const cliLaunchNewNotebook = (filepath: string | null) => {
       kernelSpecsPromise.then((specs: Kernelspecs) => {
-        let kernel: string;
+        let kernel: string = defaultKernel(store.getState());
+        const passedKernel = argv.kernel as string;
 
-        if (argv.kernel in specs) {
-          kernel = argv.kernel;
-        } else if ("python2" in specs) {
-          kernel = "python2";
-        } else {
+        if (passedKernel && passedKernel in specs) {
+          kernel = passedKernel;
+        } else if (!kernel && !(kernel in specs)) {
           const specList = Object.keys(specs);
           specList.sort();
           kernel = specList[0];
         }
+
         if (kernel && specs[kernel]) {
           launchNewNotebook(filepath, specs[kernel]);
         }
@@ -294,7 +255,7 @@ openFile$
       log.info("launching an empty notebook by default");
       cliLaunchNewNotebook(null);
     } else {
-      notebooks.forEach(f => {
+      notebooks.forEach((f) => {
         if (existsSync(resolve(f))) {
           try {
             launch(resolve(f));
@@ -315,58 +276,23 @@ openFile$
 openFile$.pipe(skipUntil(fullAppReady$)).subscribe(openFileFromEvent);
 let tray = null;
 fullAppReady$.subscribe(() => {
+  // Setup right-click context menu for all BrowserWindows
+  initContextMenu();
+
   kernelSpecsPromise
-    .then(kernelSpecs => {
+    .then((kernelSpecs) => {
       if (Object.keys(kernelSpecs).length !== 0) {
         store.dispatch(setKernelSpecs(kernelSpecs));
-        const menu = loadFullMenu();
-        Menu.setApplicationMenu(menu);
-        const logo =
-          process.platform === "win32" ? "logoWhite" : "logoTemplate";
-        const trayImage = join(__dirname, "..", "static", `${logo}.png`);
-        tray = new Tray(trayImage);
-        const trayMenu = loadTrayMenu();
-        tray.setContextMenu(trayMenu);
-      } else {
-        dialog.showMessageBox(
-          {
-            type: "warning",
-            title: "No Kernels Installed",
-            buttons: [],
-            message: "No kernels are installed on your system.",
-            detail:
-              "No kernels are installed on your system so you will not be " +
-              "able to execute code cells in any language. You can read about " +
-              "installing kernels at " +
-              "https://ipython.readthedocs.io/en/latest/install/kernel_install.html"
-          },
-          index => {
-            if (index === 0) {
-              app.quit();
-            }
-          }
-        );
       }
+      const menu = loadFullMenu();
+      Menu.setApplicationMenu(menu);
+      const logo = process.platform === "win32" ? "logoWhite" : "logoTemplate";
+      const trayImage = join(__dirname, "..", "static", `${logo}.png`);
+      tray = new Tray(trayImage);
+      const trayMenu = loadTrayMenu();
+      tray.setContextMenu(trayMenu);
     })
-    .catch(err => {
-      dialog.showMessageBox(
-        {
-          type: "error",
-          title: "No Kernels Installed",
-          buttons: [],
-          message: "No kernels are installed on your system.",
-          detail:
-            "No kernels are installed on your system so you will not be " +
-            "able to execute code cells in any language. You can read about " +
-            "installing kernels at " +
-            "https://ipython.readthedocs.io/en/latest/install/kernel_install.html" +
-            `\nFull error: ${err.message}`
-        },
-        index => {
-          if (index === 0) {
-            app.quit();
-          }
-        }
-      );
+    .catch((err) => {
+      console.error("Unexpected error when fetching kernelspecs: ", err);
     });
 });

@@ -1,0 +1,32 @@
+{
+  "name": "@nteract/myths",
+  "version": "0.2.0",
+  "description": "A redux-observable framework for better locality of dependencies",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "nteractDesktop": "src/index.ts",
+  "scripts": {},
+  "repository": "https://github.com/nteract/nteract/tree/master/packages/myths",
+  "keywords": [
+    "nteract"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "react-redux": "^6.0.0",
+    "redux": "^4.0.0",
+    "redux-observable": "^2.0.0-alpha.0",
+    "rxjs": "^6.3.3"
+  },
+  "peerDependencies": {
+    "immutable": "^4.0.0-rc.12",
+    "react": "^16.3.2",
+    "react-dom": "^16.3.2"
+  },
+  "devDependencies": {
+    "utility-types": "^3.10.0"
+  },
+  "author": "nteract contributers",
+  "license": "BSD-3-Clause"
+}

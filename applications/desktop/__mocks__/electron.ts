@@ -27,7 +27,8 @@ module.exports = {
       getVersion: () => "1.4.0"
     },
     dialog: {
-      showSaveDialog: jest.fn()
+      showSaveDialog: jest.fn(),
+      showMessageBox: jest.fn()
     },
     getCurrentWindow: () => {
       return {

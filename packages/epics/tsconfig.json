@@ -6,11 +6,11 @@
   },
   "include": ["src"],
   "references": [
-    {
-      "path": "../messaging"
-    },
-    { "path": "../commutable" },
     { "path": "../actions" },
+    { "path": "../commutable" },
+    { "path": "../messaging" },
+    { "path": "../mythic-configuration" },
+    { "path": "../mythic-notifications" },
     { "path": "../selectors" },
     { "path": "../types" },
     { "path": "../rx-jupyter" }

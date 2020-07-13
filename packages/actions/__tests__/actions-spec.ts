@@ -1,10 +1,7 @@
-import {
-  createContentRef,
-  createKernelRef,
-  LanguageInfoMetadata
-} from "@nteract/types";
-import * as actions from "../src/actions";
-import * as actionTypes from "../src/actionTypes";
+import { createContentRef, createKernelRef } from "@nteract/types";
+import * as actionTypes from "../src";
+
+const actions = actionTypes;
 
 describe("setLanguageInfo", () => {
   test("creates a SET_LANGUAGE_INFO action", () => {
@@ -86,9 +83,7 @@ describe("unhideAll", () => {
       }
     });
 
-    expect(
-      actions.unhideAll({ outputHidden: false, contentRef })
-    ).toEqual({
+    expect(actions.unhideAll({ outputHidden: false, contentRef })).toEqual({
       type: actionTypes.UNHIDE_ALL,
       payload: {
         outputHidden: false,
@@ -97,9 +92,7 @@ describe("unhideAll", () => {
       }
     });
 
-    expect(
-      actions.unhideAll({ inputHidden: false, contentRef })
-    ).toEqual({
+    expect(actions.unhideAll({ inputHidden: false, contentRef })).toEqual({
       type: actionTypes.UNHIDE_ALL,
       payload: {
         outputHidden: undefined,
@@ -108,9 +101,7 @@ describe("unhideAll", () => {
       }
     });
 
-    expect(
-      actions.unhideAll({ contentRef })
-    ).toEqual({
+    expect(actions.unhideAll({ contentRef })).toEqual({
       type: actionTypes.UNHIDE_ALL,
       payload: {
         outputHidden: undefined,
@@ -250,12 +241,12 @@ describe("launchKernelByName", () => {
   });
 });
 
-describe("setKernelspecInfo", () => {
-  test("creates a SET_KERNELSPEC_INFO action", () => {
+describe("setKernelMetadata", () => {
+  test("creates a SET_KERNEL_METADATA action", () => {
     const kernelInfo = { name: "japanese" };
     const contentRef = createContentRef();
-    expect(actions.setKernelspecInfo({ kernelInfo, contentRef })).toEqual({
-      type: actionTypes.SET_KERNELSPEC_INFO,
+    expect(actions.setKernelMetadata({ kernelInfo, contentRef })).toEqual({
+      type: actionTypes.SET_KERNEL_METADATA,
       payload: {
         contentRef,
         kernelInfo: {
@@ -353,16 +344,6 @@ describe("deleteCell", () => {
     const contentRef = createContentRef();
     expect(actions.deleteCell({ id: "1234", contentRef })).toEqual({
       type: actionTypes.DELETE_CELL,
-      payload: { id: "1234", contentRef }
-    });
-  });
-});
-
-describe("removeCell", () => {
-  test("DEPRECATION WARNING:DEPRECATED. Use deleteCell() instead. creates a REMOVE_CELL action", () => {
-    const contentRef = createContentRef();
-    expect(actions.removeCell({ id: "1234", contentRef })).toEqual({
-      type: actionTypes.REMOVE_CELL,
       payload: { id: "1234", contentRef }
     });
   });
@@ -488,37 +469,6 @@ describe("createCellAbove", () => {
   });
 });
 
-describe("createCellAfter", () => {
-  test("DEPRECATION WARNING:DEPRECATED. Use createCellBelow() instead. creates a CREATE_CELL_AFTER action with provided source string", () => {
-    const contentRef = createContentRef();
-    const cellType = "code";
-    const id = "1234";
-    const source = 'print("woo")';
-    expect(
-      actions.createCellAfter({ cellType, id, source, contentRef })
-    ).toEqual({
-      type: actionTypes.CREATE_CELL_AFTER,
-      payload: { source, cellType, id, contentRef }
-    });
-  });
-});
-
-describe("createCellBefore", () => {
-  test("DEPRECATION WARNING:DEPRECATED. USE createCellAbove() instead. creates a CREATE_CELL_BEFORE action", () => {
-    const contentRef = createContentRef();
-    expect(
-      actions.createCellBefore({ cellType: "markdown", id: "1234", contentRef })
-    ).toEqual({
-      type: actionTypes.CREATE_CELL_BEFORE,
-      payload: {
-        cellType: "markdown",
-        contentRef,
-        id: "1234"
-      }
-    });
-  });
-});
-
 describe("createCellAppend", () => {
   test("creates a CREATE_CELL_APPEND action", () => {
     const contentRef = createContentRef();
@@ -527,15 +477,6 @@ describe("createCellAppend", () => {
     ).toEqual({
       type: actionTypes.CREATE_CELL_APPEND,
       payload: { cellType: "markdown", contentRef }
-    });
-  });
-});
-
-describe("setNotificationSystem", () => {
-  test("creates a SET_NOTIFICATION_SYSTEM action", () => {
-    expect(actions.setNotificationSystem(null)).toEqual({
-      type: actionTypes.SET_NOTIFICATION_SYSTEM,
-      payload: { notificationSystem: null }
     });
   });
 });
@@ -656,7 +597,7 @@ describe("updateOutputMetadata", () => {
 
 describe("setGithubToken", () => {
   test("creates a SET_GITHUB_TOKEN action", () => {
-    expect(actions.setGithubToken("token_string")).toEqual({
+    expect(actions.setGithubToken({ githubToken: "token_string" })).toEqual({
       type: actionTypes.SET_GITHUB_TOKEN,
       payload: { githubToken: "token_string" }
     });
@@ -706,6 +647,30 @@ describe("save", () => {
     expect(actions.saveFulfilled({ contentRef, model })).toEqual({
       type: actionTypes.SAVE_FULFILLED,
       payload: { contentRef, model: { fake: true } }
+    });
+  });
+
+  test("creates a CLOSE_NOTEBOOK action", () => {
+    const contentRef = createContentRef();
+    expect(actions.closeNotebook({ contentRef })).toEqual({
+      type: actionTypes.CLOSE_NOTEBOOK,
+      payload: { contentRef }
+    });
+  });
+
+  test("creates a DISPOSE_CONTENT action", () => {
+    const contentRef = createContentRef();
+    expect(actions.disposeContent({ contentRef })).toEqual({
+      type: actionTypes.DISPOSE_CONTENT,
+      payload: { contentRef }
+    });
+  });
+
+  test("creates a DISPOSE_KERNEL action", () => {
+    const kernelRef = createKernelRef();
+    expect(actions.disposeKernel({ kernelRef })).toEqual({
+      type: actionTypes.DISPOSE_KERNEL,
+      payload: { kernelRef }
     });
   });
 });

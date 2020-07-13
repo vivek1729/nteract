@@ -3,6 +3,7 @@ import { mount } from "enzyme";
 import React from "react";
 import { empty, Subject } from "rxjs";
 
+import Immutable from "immutable";
 import Editor from "../src/";
 
 const complete = require("../src/jupyter/complete");
@@ -141,12 +142,101 @@ describe("editor.hint CodeMirror callback", () => {
 
 describe("Editor", () => {
   it("handles cursor blinkery changes", () => {
-    const editorWrapper = mount(<Editor cursorBlinkRate={531} />);
+    const editorWrapper = mount(
+      <Editor codeMirror={{ cursorBlinkRate: 531 }} />
+    );
     const instance = editorWrapper.instance();
     const cm = instance.cm;
     expect(cm.options.cursorBlinkRate).toBe(531);
-    editorWrapper.setProps({ cursorBlinkRate: 0 });
+    editorWrapper.setProps({ codeMirror: { cursorBlinkRate: 0 } });
     expect(cm.options.cursorBlinkRate).toBe(0);
+  });
+  it("tab triggers completion when pressed at end of line", () => {
+    const component = mount(<Editor />);
+    const editor = {
+      somethingSelected: jest.fn(() => false),
+      execCommand: jest.fn(),
+      getCursor: () => ({ line: 1, ch: 1 })
+    };
+    component.instance().executeTab(editor);
+    expect(editor.execCommand).toBeCalledWith("autocomplete");
+  });
+  it("tab indents when something is selected", () => {
+    const component = mount(<Editor />);
+    const editor = {
+      somethingSelected: jest.fn(() => true),
+      execCommand: jest.fn(),
+      getCursor: () => ({ line: 0, ch: 1 })
+    };
+    component.instance().executeTab(editor);
+    expect(editor.execCommand).toBeCalledWith("indentMore");
+  });
+  it("converts an Immutable.Map mode to an object", () => {
+    const component = mount(
+      <Editor codeMirror={{ mode: Immutable.Map({ language: "python" }) }} />
+    );
+    const result = component.instance().cleanMode();
+    expect(result.language).toBe("python");
+  });
+  it("can update component", () => {
+    const component = mount(
+      <Editor codeMirror={{ mode: Immutable.Map({ language: "python" }) }} />
+    );
+    component.setProps({ codeMirror: { mode: "text/ipython" } });
+    expect(component.isEmptyRender()).toBe(false);
+  });
+  it("can handle moving line down if not at bottom", () => {
+    const component = mount(
+      <Editor codeMirror={{ mode: Immutable.Map({ language: "python" }) }} />
+    );
+    const editor = {
+      getCursor: jest.fn(() => ({ line: 2, ch: 1 })),
+      lastLine: jest.fn(() => 5),
+      getLine: jest.fn(() => "test line"),
+      execCommand: jest.fn(() => null)
+    };
+    component.instance().goLineDownOrEmit(editor);
+    expect(editor.execCommand).toBeCalledWith("goLineDown");
+  });
+
+  it("can handle moving line down if at bottom", () => {
+    const component = mount(
+      <Editor codeMirror={{ mode: Immutable.Map({ language: "python" }) }} />
+    );
+    const editor = {
+      getCursor: jest.fn(() => ({ line: 5, ch: 4 })),
+      lastLine: jest.fn(() => 5),
+      getLine: jest.fn(() => "test"),
+      somethingSelected: jest.fn(() => false),
+      execCommand: jest.fn(() => null)
+    };
+    component.instance().goLineDownOrEmit(editor);
+    expect(editor.execCommand).not.toBeCalled();
+  });
+  it("can handle moving line up if not at top", () => {
+    const component = mount(
+      <Editor codeMirror={{ mode: Immutable.Map({ language: "python" }) }} />
+    );
+    const editor = {
+      getCursor: jest.fn(() => ({ line: 2, ch: 1 })),
+      somethingSelected: jest.fn(() => false),
+      execCommand: jest.fn(() => null)
+    };
+    component.instance().goLineUpOrEmit(editor);
+    expect(editor.execCommand).toBeCalledWith("goLineUp");
+  });
+
+  it("can handle moving line up if at top", () => {
+    const component = mount(
+      <Editor codeMirror={{ mode: Immutable.Map({ language: "python" }) }} />
+    );
+    const editor = {
+      getCursor: jest.fn(() => ({ line: 0, ch: 0 })),
+      somethingSelected: jest.fn(() => false),
+      execCommand: jest.fn(() => null)
+    };
+    component.instance().goLineUpOrEmit(editor);
+    expect(editor.execCommand).not.toBeCalled();
   });
 });
 

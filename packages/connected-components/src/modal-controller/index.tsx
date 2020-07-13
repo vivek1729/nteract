@@ -9,7 +9,7 @@ interface Props {
   modalType: string;
 }
 
-class ModalController extends React.Component<Props> {
+export class ModalController extends React.Component<Props> {
   getModal = () => {
     const { modalType } = this.props;
     switch (modalType) {

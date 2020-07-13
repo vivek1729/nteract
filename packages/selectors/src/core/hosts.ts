@@ -22,7 +22,8 @@ export const serverConfig = (host: JupyterHostRecord): ServerConfig => {
     crossDomain: host.crossDomain ? host.crossDomain : undefined,
     token: host.token ? host.token : undefined,
     ajaxOptions: host.ajaxOptions ? host.ajaxOptions : undefined,
-    wsProtocol: host.wsProtocol ? host.wsProtocol : undefined
+    wsProtocol: host.wsProtocol ? host.wsProtocol : undefined,
+    closeObserver: host.closeObserver ? host.closeObserver : undefined
   };
 };
 

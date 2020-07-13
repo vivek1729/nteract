@@ -9,7 +9,7 @@ const { aliases } = require("./aliases");
 // We don't transpile packages in node_modules, unless it's _our_ package
 // Also don't transpile @nteract/plotly because it's plotly and massive
 // Explicitly ignore the typescript/lib in monaco, or everything fails
-const exclude = /node_modules\/(?!(@nteract\/(?!plotly)|rx-jupyter|rx-binder|ansi-to-react|enchannel-zmq-backend|fs-observable))|vs\/language\/typescript\/lib/;
+const exclude = /node_modules\/(?!(@nteract\/(?!plotly)|rx-binder))|vs\/language\/typescript\/lib/;
 
 function mergeDefaultAliases(originalAlias /*: ?Aliases */) /*: Aliases */ {
   return {
@@ -18,7 +18,7 @@ function mergeDefaultAliases(originalAlias /*: ?Aliases */) /*: Aliases */ {
     // Alias nteract packages
     ...aliases,
     // Alias RxJS modules
-    ...rxAliases
+    ...rxAliases,
   };
 }
 
@@ -27,38 +27,51 @@ const tsLoaderConfig = {
   options: {
     transpileOnly: true,
     compilerOptions: {
-      noEmit: false
-    }
-  }
+      noEmit: false,
+    },
+  },
 };
 
-// We will follow the next.js universal webpack configuration signature
-// https://zeit.co/blog/next5#universal-webpack-and-next-plugins
+const fileLoaderConfig = {
+  loader: "file-loader",
+  test: /\.(jpg|png|gif)$/,
+};
 
 function nextWebpack(config /*: WebpackConfig */) /*: WebpackConfig */ {
-  config.externals = ["canvas", ...config.externals];
-  config.module.rules = config.module.rules.map(rule => {
-    if (
-      rule.test.source.includes("js") &&
-      typeof rule.exclude !== "undefined"
-    ) {
-      rule.exclude = exclude;
-    }
+  if (config.externals) {
+    config.externals = ["canvas", ...config.externals];
+  } else {
+    config.externals = ["canvas"];
+  }
 
-    return rule;
-  });
+  config.node = {
+    ...config.node,
+    fs: "empty",
+  };
 
-  config.module.rules.push({
-    tsLoaderConfig
-  });
+  config.module.rules.push(fileLoaderConfig);
 
-  config.resolve = Object.assign({}, config.resolve, {
-    mainFields: ["nteractDesktop", "jsnext:main", "module", "main"],
+  config.resolve = {
+    ...config.resolve,
+    mainFields:
+      config.resolve && config.resolve.mainFields
+        ? [
+            ...config.resolve.mainFields,
+            "nteractDesktop",
+            "jsnext:main",
+            "module",
+            "main",
+          ]
+        : ["nteractDesktop", "jsnext:main", "module", "main"],
     alias: mergeDefaultAliases(
       config.resolve ? config.resolve.alias : undefined
     ),
-    extensions: [".js", ".jsx", ".ts", ".tsx"]
-  });
+    extensions:
+      config.resolve && config.resolve.extensions
+        ? [...config.resolve.extensions, ".js", ".jsx", ".ts", ".tsx"]
+        : [".js", ".jsx", ".ts", ".tsx"],
+  };
+
   return config;
 }
 
@@ -67,5 +80,5 @@ module.exports = {
   aliases,
   mergeDefaultAliases,
   nextWebpack,
-  tsLoaderConfig
+  tsLoaderConfig,
 };

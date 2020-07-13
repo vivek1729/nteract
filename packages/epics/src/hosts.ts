@@ -1,49 +1,14 @@
-// Vendor modules
 import * as actions from "@nteract/actions";
 import { toJS } from "@nteract/commutable";
 import { NotebookV4 } from "@nteract/commutable/lib/v4";
 import * as selectors from "@nteract/selectors";
-import {
-  AppState,
-  DirectoryContentRecordProps,
-  DummyContentRecordProps,
-  FileContentRecordProps,
-  NotebookContentRecordProps,
-  ServerConfig
-} from "@nteract/types";
+import { AppState, DirectoryContentRecordProps, DummyContentRecordProps, FileContentRecordProps, IContentProvider, NotebookContentRecordProps, ServerConfig } from "@nteract/types";
 import { RecordOf } from "immutable";
-import { ofType } from "redux-observable";
-import { ActionsObservable, StateObservable } from "redux-observable";
-import { bookstore, contents } from "rx-jupyter";
-import { IContent } from "rx-jupyter/lib/contents";
-import { empty, Observable, of } from "rxjs";
+import { ofType, StateObservable } from "redux-observable";
+import { bookstore } from "rx-jupyter";
+import { EMPTY, Observable, of } from "rxjs";
 import { AjaxResponse } from "rxjs/ajax";
 import { catchError, map, switchMap, tap } from "rxjs/operators";
-
-/**
- * Converts a `Notebook` content to the Jupyter `Content`
- * type expected in Bookstore.
- *
- * @param content {NotebookContentRecordProps}  Notebook
- */
-function convertNotebookToContent(
-  content: NotebookContentRecordProps
-): Partial<IContent<"notebook">> & { type: "notebook" } {
-  const { filepath, lastSaved, mimetype, model, type } = content;
-  const notebook: any = model.toJS().savedNotebook;
-
-  return {
-    name: filepath.split("/").pop() || "",
-    path: filepath,
-    type,
-    created: "",
-    last_modified:
-      lastSaved && lastSaved.toString() ? lastSaved.toString() : "",
-    content: notebook,
-    mimetype: mimetype || "",
-    format: "json"
-  };
-}
 
 /**
  * First step in publishing notebooks to bookstore.
@@ -55,9 +20,10 @@ function convertNotebookToContent(
  * @param state$  Application state.
  */
 export function publishToBookstore(
-  action$: ActionsObservable<actions.PublishToBookstore>,
-  state$: StateObservable<AppState>
-): Observable<{}> {
+  action$: Observable<actions.PublishToBookstore>,
+  state$: StateObservable<AppState>,
+  dependencies: { contentProvider: IContentProvider }
+): Observable<unknown> {
   return action$.pipe(
     ofType(actions.PUBLISH_TO_BOOKSTORE),
     switchMap(action => {
@@ -77,7 +43,7 @@ export function publishToBookstore(
 
       // Dismiss any usage that isn't targeting a jupyter server
       if (host.type !== "jupyter") {
-        return empty();
+        return EMPTY;
       }
 
       const content:
@@ -102,7 +68,7 @@ export function publishToBookstore(
       const notebook: NotebookV4 = toJS(content.model.notebook);
 
       // Save notebook first before sending to Bookstore
-      return contents
+      return dependencies.contentProvider
         .save(serverConfig, content.filepath, {
           content: notebook,
           type: "notebook"
@@ -150,7 +116,7 @@ export function publishToBookstore(
  * @param state$  Application state.
  */
 export function publishToBookstoreAfterSave(
-  action$: ActionsObservable<actions.PublishToBookstoreAfterSave>,
+  action$: Observable<actions.PublishToBookstoreAfterSave>,
   state$: StateObservable<AppState>
 ): Observable<void | actions.PublishToBookstoreFailed> {
   const state: any = state$.value;
@@ -169,7 +135,6 @@ export function publishToBookstoreAfterSave(
           if (xhr.status !== 200) {
             throw new Error(xhr.response);
           }
-          console.log("XHR: ", xhr);
         }),
         map(() => {
           actions.publishToBookstoreSucceeded({

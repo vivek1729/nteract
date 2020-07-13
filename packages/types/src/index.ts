@@ -1,7 +1,5 @@
-import * as Immutable from "immutable";
-
 import { MediaBundle } from "@nteract/commutable";
-import { Notification } from "react-notification-system";
+import * as Immutable from "immutable";
 import {
   EntitiesRecordProps,
   makeEmptyHostRecord,
@@ -10,9 +8,13 @@ import {
 import { HostRecord } from "./entities/hosts";
 import { KernelRef, KernelspecsRef } from "./refs";
 
+export * from "./content-provider";
 export * from "./entities";
 export * from "./ids";
 export * from "./refs";
+
+import * as errors from "./errors";
+export { errors };
 
 export interface KernelspecMetadata {
   display_name: string;
@@ -94,24 +96,8 @@ export type PayloadMessage =
   | EditPayloadMessage
   | AskExitPayloadMessage;
 
-export interface CommsRecordProps {
-  targets: Immutable.Map<any, any>;
-  info: Immutable.Map<any, any>;
-  models: Immutable.Map<any, any>;
-}
-
-export type CommsRecord = Immutable.RecordOf<CommsRecordProps>;
-
-export const makeCommsRecord = Immutable.Record<CommsRecordProps>({
-  targets: Immutable.Map(),
-  info: Immutable.Map(),
-  models: Immutable.Map()
-});
-
 // Pull version from our package.json
 const version: string = require("../package.json").version;
-
-export type ConfigState = Immutable.Map<string, any>;
 
 export interface StateRecordProps {
   kernelRef: KernelRef | null;
@@ -130,12 +116,8 @@ export type CoreRecord = Immutable.RecordOf<StateRecordProps>;
 export interface AppRecordProps {
   host: HostRecord;
   githubToken?: string | null;
-  notificationSystem: {
-    addNotification: (msg: Notification) => void;
-  };
   isSaving: boolean;
   lastSaved?: Date | null;
-  configLastSaved?: Date | null;
   error: any;
   // The version number should be provided by an app on boot
   version: string;
@@ -144,23 +126,8 @@ export interface AppRecordProps {
 export const makeAppRecord = Immutable.Record<AppRecordProps>({
   host: makeEmptyHostRecord(),
   githubToken: null,
-  notificationSystem: {
-    addNotification: (msg: Notification) => {
-      let logger = console.log.bind(console);
-      switch (msg.level) {
-        case "error":
-          logger = console.error.bind(console);
-          break;
-        case "warning":
-          logger = console.warn.bind(console);
-          break;
-      }
-      logger(msg);
-    }
-  },
   isSaving: false,
   lastSaved: null,
-  configLastSaved: null,
   error: null,
   // set the default version to @nteract/core's version
   version: `@nteract/core@${version}`
@@ -170,16 +137,5 @@ export type AppRecord = Immutable.RecordOf<AppRecordProps>;
 
 export interface AppState {
   app: AppRecord;
-  comms: CommsRecord;
-  config: ConfigState;
   core: CoreRecord;
 }
-
-export type AppStateRecord = Immutable.RecordOf<AppState>;
-
-export const makeAppStateRecord = Immutable.Record<AppState>({
-  app: makeAppRecord(),
-  comms: makeCommsRecord(),
-  config: Immutable.Map<string, any>(),
-  core: makeStateRecord()
-});

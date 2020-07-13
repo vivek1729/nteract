@@ -1,13 +1,19 @@
 import { commListenEpic } from "./comm";
 import {
   autoSaveCurrentContentEpic,
+  closeNotebookEpic,
   fetchContentEpic,
+  saveAsContentEpic,
   saveContentEpic,
   updateContentEpic
 } from "./contents";
 import {
   executeAllCellsEpic,
+  executeCellAfterKernelLaunchEpic,
   executeCellEpic,
+  executeFocusedCellEpic,
+  lazyLaunchKernelEpic,
+  sendExecuteRequestEpic,
   sendInputReplyEpic,
   updateDisplayEpic
 } from "./execute";
@@ -31,9 +37,13 @@ import {
 // rely on `import { epics } from ""@nteract/core"`
 // as it would collide the array with the named exports
 const allEpics = [
+  executeCellAfterKernelLaunchEpic,
   executeCellEpic,
+  lazyLaunchKernelEpic,
+  sendExecuteRequestEpic,
   updateDisplayEpic,
   executeAllCellsEpic,
+  executeFocusedCellEpic,
   commListenEpic,
   launchWebSocketKernelEpic,
   changeWebSocketKernelEpic,
@@ -41,24 +51,29 @@ const allEpics = [
   killKernelEpic,
   acquireKernelInfoEpic,
   watchExecutionStateEpic,
-  launchKernelWhenNotebookSetEpic,
   restartKernelEpic,
   fetchKernelspecsEpic,
   fetchContentEpic,
   updateContentEpic,
   saveContentEpic,
+  saveAsContentEpic,
   autoSaveCurrentContentEpic,
   publishToBookstore,
   publishToBookstoreAfterSave,
   restartWebSocketKernelEpic,
-  sendInputReplyEpic
+  sendInputReplyEpic,
+  closeNotebookEpic
 ];
 
 export {
   allEpics,
+  executeCellAfterKernelLaunchEpic,
   executeCellEpic,
+  lazyLaunchKernelEpic,
+  sendExecuteRequestEpic,
   updateDisplayEpic,
   executeAllCellsEpic,
+  executeFocusedCellEpic,
   commListenEpic,
   launchWebSocketKernelEpic,
   changeWebSocketKernelEpic,
@@ -72,9 +87,11 @@ export {
   fetchContentEpic,
   updateContentEpic,
   saveContentEpic,
+  saveAsContentEpic,
   autoSaveCurrentContentEpic,
   publishToBookstore,
   publishToBookstoreAfterSave,
   restartWebSocketKernelEpic,
-  sendInputReplyEpic
+  sendInputReplyEpic,
+  closeNotebookEpic
 };

@@ -1,0 +1,4 @@
+site_name: nteract/core
+
+nav:
+  - Overview: "overview.md"

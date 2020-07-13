@@ -18,10 +18,6 @@ body {
   margin: 0;
 }
 
-#app {
-  padding-top: 20px;
-}
-
 @keyframes fadeOut {
   from {
     opacity: 1;

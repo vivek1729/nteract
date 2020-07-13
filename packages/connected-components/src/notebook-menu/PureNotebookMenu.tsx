@@ -314,7 +314,7 @@ class PureNotebookMenu extends React.PureComponent<PureNotebookMenuProps> {
     const notebookMenuStyles: CSSProperties = {
       position: "sticky",
       top: 0,
-      zIndex: 10000,
+      zIndex: 19, // blueprint's Toasts are at 20 and need to go on top
       display: "inline-flex",
       width: "100%",
       background: "var(--theme-app-bg)",

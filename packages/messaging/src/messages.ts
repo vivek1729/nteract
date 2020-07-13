@@ -1,4 +1,4 @@
-import uuid from "uuid/v4";
+import { v4 as uuid } from "uuid";
 import {
   BasicOutputMessageContent,
   ExecuteRequest,
@@ -310,15 +310,25 @@ export function stream(content: { name: "stdout" | "stderr"; text: string }) {
  *
  * http://jupyter-client.readthedocs.io/en/stable/messaging.html#execution-results
  */
-export function executeReply(content: {
+
+
+export interface ExecuteReplyError {
   status: string;
-  execution_count: number;
+  execution_count : number;
+  ename : string;
+  evalue : string;
+  traceback : string[];
+}
+export interface ExecuteReplyOk {
+  status: string;
+  execution_count : number;
   payload?: object[];
   user_expressions?: object;
-}) {
-  // TODO: This function could be better typed. It's a bit dual headed though since:
-  //         * `status: ok` carries payloads
-  //         * `status: error` carries error info that is also in error output
+
+}
+export function executeReply(
+  content: ExecuteReplyOk | ExecuteReplyError
+) {
   return message(
     {
       msg_type: "execute_reply"

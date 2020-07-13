@@ -1,5 +1,6 @@
 import { actions as actionsModule, makeStateRecord } from "@nteract/core";
-import { ActionsObservable } from "redux-observable";
+import { of } from "rxjs";
+
 import { toArray } from "rxjs/operators";
 
 import {
@@ -17,7 +18,7 @@ describe("launchKernelObservable", () => {
 
 describe("launchKernelEpic", () => {
   test("throws an error if given a bad action", async () => {
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       {
         type: actionsModule.LAUNCH_KERNEL,
         payload: {
@@ -37,6 +38,7 @@ describe("launchKernelEpic", () => {
       {
         error: true,
         payload: {
+          contentRef: undefined,
           error: new Error("launchKernel needs a kernelSpec and a kernelRef"),
           kernelRef: "1234"
         },
@@ -45,6 +47,7 @@ describe("launchKernelEpic", () => {
       {
         error: true,
         payload: {
+          contentRef: undefined,
           error: new Error("launchKernel needs a kernelSpec and a kernelRef"),
           kernelRef: undefined
         },
@@ -54,7 +57,7 @@ describe("launchKernelEpic", () => {
   });
 
   test("calls launchKernelObservable if given the correct action", async () => {
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actionsModule.launchKernel({
         kernelSpec: { spec: "hokey", name: "woohoo" },
         contentRef: "abc",
@@ -76,13 +79,6 @@ describe("launchKernelEpic", () => {
       .toPromise();
 
     expect(responses[0]).toEqual(
-      actionsModule.setKernelspecInfo({
-        kernelInfo: { spec: "hokey", name: "woohoo" },
-        contentRef: "abc"
-      })
-    );
-
-    expect(responses[1]).toEqual(
       actionsModule.launchKernelSuccessful({
         kernel: {
           info: null,
@@ -102,7 +98,7 @@ describe("launchKernelEpic", () => {
       })
     );
 
-    expect(responses[2]).toEqual(
+    expect(responses[1]).toEqual(
       actionsModule.setExecutionState({
         kernelStatus: "launched",
         kernelRef: "123"
@@ -113,7 +109,7 @@ describe("launchKernelEpic", () => {
 
 describe("launchKernelByNameEpic", () => {
   test("creates a LAUNCH_KERNEL action in response to a LAUNCH_KERNEL_BY_NAME action", done => {
-    const action$ = ActionsObservable.of(
+    const action$ = of(
       actionsModule.launchKernelByName({
         kernelSpecName: "python3",
         cwd: "~"

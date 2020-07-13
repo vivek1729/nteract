@@ -1,33 +1,9 @@
-import path from "path";
-
-import {
-  AppState,
-  ContentRecord,
-  ContentRef,
-  KernelRef,
-  NotebookContentRecord,
-  selectors
-} from "@nteract/core";
+import { AppState, ContentRecord, ContentRef, KernelRef, NotebookContentRecord, selectors } from "@nteract/core";
 import { remote } from "electron";
+import path from "path";
 import { Store } from "redux";
-import {
-  combineLatest,
-  empty,
-  from,
-  Observable,
-  ObservableInput,
-  of
-} from "rxjs";
-import {
-  debounceTime,
-  distinctUntilChanged,
-  map,
-  mergeMap,
-  share,
-  switchMap
-} from "rxjs/operators";
-
-import { Actions } from "./actions";
+import { combineLatest, EMPTY, Observable, of } from "rxjs";
+import { debounceTime, distinctUntilChanged, map, mergeMap, switchMap } from "rxjs/operators";
 
 const HOME = remote.app.getPath("home");
 
@@ -36,7 +12,7 @@ const HOME = remote.app.getPath("home");
  * @param  {string} p the full path to a file
  * @return {string}   tildified path
  */
-export function tildify(p?: string) {
+export function tildify(p?: string): string {
   if (!p) {
     return "";
   }
@@ -53,7 +29,7 @@ interface Attributes {
   kernelStatus?: string | null;
 }
 
-export function setTitleFromAttributes(attributes: Attributes) {
+export function setTitleFromAttributes(attributes: Attributes): void {
   const filename = tildify(attributes.fullpath);
   const { kernelStatus } = attributes;
 
@@ -88,7 +64,7 @@ export function createTitleFeed(
       if (content) {
         return of(content);
       } else {
-        return empty();
+        return EMPTY;
       }
     })
   );
@@ -112,7 +88,7 @@ export function createTitleFeed(
       if (content && content.type === "notebook") {
         return of(content.model.kernelRef);
       } else {
-        return empty();
+        return EMPTY;
       }
     })
   );
@@ -136,7 +112,7 @@ export function createTitleFeed(
     kernelStatus$,
     (modified, fullpath, kernelStatus) => ({
       fullpath,
-      kernelStatus,
+      kernelStatus: kernelStatus ? kernelStatus.toString() : null,
       modified
     })
   ).pipe(
@@ -147,7 +123,7 @@ export function createTitleFeed(
 
 export function initNativeHandlers(
   contentRef: ContentRef,
-  store: Store<AppState, Actions>
+  store: Store<AppState, any>
 ) {
   const state$ = new Observable<AppState>(observer => {
     const unsubscribe = store.subscribe(() => {

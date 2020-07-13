@@ -2,11 +2,13 @@
 #
 # Check https://circleci.com/docs/2.0/language-javascript/ for more details
 #
-version: 2
+version: 2.1
+orbs:
+  codecov: codecov/codecov@1.0.5
 jobs:
   build:
     docker:
-      - image: circleci/python:3.7.3-node
+      - image: circleci/python:3.8.3-node
 
     working_directory: ~/nteract
 
@@ -34,7 +36,19 @@ jobs:
       - run: yarn run test:lint
       # build all packages and applications
       - run: yarn build:all:ci
-      - run: yarn run test --maxWorkers 1
+
+      - run:
+          name: Run tests
+          command: yarn run test:coverage --maxWorkers 1
+
+      # Store coverage details
+      - store_artifacts:
+          path: coverage
+
+      # Update coverage details
+      - codecov/upload:
+          file: ./coverage/lcov.info
+          conf: ./.codecov.yml
 
       - run:
           name: Build Docs

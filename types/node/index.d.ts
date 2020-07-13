@@ -11,6 +11,8 @@ declare namespace NodeJS {
   }
 
   interface Global {
+    $: JQueryStatic;
+    jQuery: JQueryStatic;
     Image: Image;
     Range: () => void;
     Blob: (content: any[], options: object) => Blob;

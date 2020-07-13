@@ -1,6 +1,6 @@
 {
   "name": "nteract",
-  "version": "0.17.3",
+  "version": "0.24.0",
   "description": "Interactive literate coding notebook!",
   "main": "./lib/webpacked-main.js",
   "repository": "nteract/nteract",
@@ -44,6 +44,18 @@
     "ship": "npm run ship:one -- -mlw",
     "ship:all": "npm run ship"
   },
+  "snap": {
+    "confinement": "strict",
+    "summary": "The nteract desktop application allows you to quickly view, edit, and publish notebooks from your desktop. It  is a great tool for first-time and veteran notebook users, alike.",
+    "grade": "devel",
+    "plugs": [
+      "default"
+    ],
+    "stagePackages": [
+      "default",
+      "libsecret-1-0"
+    ]
+  },
   "build": {
     "appId": "io.nteract.nteract",
     "productName": "nteract",
@@ -69,7 +81,8 @@
     ],
     "nsis": {
       "perMachine": true,
-      "oneClick": false
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
     },
     "win": {
       "target": [
@@ -79,8 +92,16 @@
     },
     "linux": {
       "maintainer": "nteract contributors <jupyter@googlegroups.com>",
+      "synopsis": "The nteract desktop application allows you to quickly view, edit, and publish notebooks from your desktop. It  is a great tool for first-time and veteran notebook users, alike.",
       "target": [
-        "deb",
+        {
+          "target": "deb",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        },
+        "snap",
         "AppImage",
         "tar.gz"
       ],
@@ -90,7 +111,6 @@
         "Icon": "nteract",
         "MimeType": "application/x-ipynb+json;",
         "Name": "nteract",
-        "Path": "/opt/nteract/",
         "StartupNotify": "true",
         "Terminal": "false",
         "Type": "Application",
@@ -113,14 +133,31 @@
     ]
   },
   "dependencies": {
-    "@nteract/examples": "3.1.1",
-    "ijavascript": "lgeiger/ijavascript",
+    "@blueprintjs/core": "^3.7.0",
+    "@nteract/data-explorer": "^8.0.0",
+    "@nteract/examples": "3.2.0",
+    "@nteract/transform-geojson": "^5.1.13",
+    "@nteract/transform-plotly": "^6.1.10",
+    "@nteract/transform-vdom": "^4.0.15",
+    "@nteract/transform-vega": "^7.0.10",
+    "enchannel-zmq-backend": "^9.1.22",
+    "fs-observable": "^4.1.14",
+    "ijavascript": "^5.2.0",
     "jmp": "^2.0.0",
+    "lodash.sample": "^4.2.1",
+    "lodash.sortby": "^4.7.0",
+    "lodash.throttle": "^4.1.1",
     "mathjax-electron": "^3.0.0",
-    "nteract-assets": "^4.0.0"
+    "nteract-assets": "^4.0.0",
+    "rxjs": "^6.5.5"
   },
   "devDependencies": {
-    "electron": "5.0.12",
-    "file-loader": "^4.2.0"
+    "@types/fs-extra": "^9.0.0",
+    "@types/lodash.sample": "^4.2.6",
+    "@types/lodash.sortby": "^4.7.6",
+    "@types/lodash.throttle": "^4.1.6",
+    "electron": "5.0.13",
+    "file-loader": "^6.0.0",
+    "utility-types": "^3.10.0"
   }
 }

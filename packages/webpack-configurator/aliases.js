@@ -5,10 +5,10 @@ const { lernaModules } = require("./monorepo");
 const ignored = new Set([
   // we don't reuse the desktop app as a library
   "nteract",
-
   // It's this package, the one you're currently looking at! We must skip it.
   "@nteract/webpack-configurator",
-
+  // Ignore the nteract web app
+  "@nteract/web",
   // The jupyter extension will rely on this package
   "nteract-on-jupyter",
   // The nbextension is the metapackage (python bits) and isn't used by anything

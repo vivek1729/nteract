@@ -1,8 +1,8 @@
 import { kernelInfoRequest } from "@nteract/messaging";
 import { ofType } from "redux-observable";
-import { ActionsObservable, StateObservable } from "redux-observable";
+import { StateObservable } from "redux-observable";
 import { kernels, sessions } from "rx-jupyter";
-import { empty, of } from "rxjs";
+import { empty, Observable, of } from "rxjs";
 import {
   catchError,
   concatMap,
@@ -17,17 +17,13 @@ import * as selectors from "@nteract/selectors";
 import { castToSessionId } from "@nteract/types";
 import { createKernelRef } from "@nteract/types";
 import { AppState } from "@nteract/types";
-import {
-  KernelRecord,
-  RemoteKernelProps,
-  ServerConfig,
-} from "@nteract/types";
+import { KernelRecord, RemoteKernelProps, ServerConfig } from "@nteract/types";
 
 import { AjaxResponse } from "rxjs/ajax";
 import { extractNewKernel } from "./kernel-lifecycle";
 
 export const launchWebSocketKernelEpic = (
-  action$: ActionsObservable<actions.LaunchKernelByNameAction>,
+  action$: Observable<actions.LaunchKernelByNameAction>,
   state$: StateObservable<AppState>
 ) =>
   action$.pipe(
@@ -86,7 +82,8 @@ export const launchWebSocketKernelEpic = (
               sessionId
             ),
             kernelSpecName,
-            hostRef
+            hostRef,
+            status: session.kernel.execution_state
           });
 
           kernel.channels.next(kernelInfoRequest());
@@ -108,7 +105,7 @@ export const launchWebSocketKernelEpic = (
   );
 
 export const changeWebSocketKernelEpic = (
-  action$: ActionsObservable<actions.ChangeKernelByName>,
+  action$: Observable<actions.ChangeKernelByName>,
   state$: StateObservable<AppState>
 ) =>
   action$.pipe(
@@ -205,7 +202,7 @@ export const changeWebSocketKernelEpic = (
   );
 
 export const interruptKernelEpic = (
-  action$: ActionsObservable<actions.InterruptKernel>,
+  action$: Observable<actions.InterruptKernel>,
   state$: StateObservable<AppState>
 ) =>
   action$.pipe(
@@ -267,7 +264,8 @@ export const interruptKernelEpic = (
       return kernels.interrupt(serverConfig, id).pipe(
         map(() =>
           actions.interruptKernelSuccessful({
-            kernelRef: action.payload.kernelRef
+            kernelRef: action.payload.kernelRef,
+            contentRef
           })
         ),
         catchError(err =>
@@ -283,7 +281,7 @@ export const interruptKernelEpic = (
   );
 
 export const killKernelEpic = (
-  action$: ActionsObservable<actions.KillKernelAction>,
+  action$: Observable<actions.KillKernelAction>,
   state$: StateObservable<AppState>
 ) =>
   // TODO: Use the sessions API for this
@@ -318,7 +316,7 @@ export const killKernelEpic = (
         return of(
           actions.killKernelFailed({
             error: new Error("kernel not available for killing"),
-            kernelRef: action.payload.kernelRef
+            kernelRef
           })
         );
       }
@@ -349,10 +347,19 @@ export const killKernelEpic = (
       //       kill kernel epic because we need to make sure that creation happens
       //       after deletion
       return sessions.destroy(serverConfig, kernel.sessionId).pipe(
-        map(() =>
-          actions.killKernelSuccessful({
-            kernelRef: action.payload.kernelRef
-          })
+        mergeMap(() =>
+          action.payload.dispose && action.payload.kernelRef
+            ? of(
+                actions.killKernelSuccessful({
+                  kernelRef: action.payload.kernelRef
+                }),
+                actions.disposeKernel({ kernelRef: action.payload.kernelRef })
+              )
+            : of(
+                actions.killKernelSuccessful({
+                  kernelRef: action.payload.kernelRef
+                })
+              )
         ),
         catchError(err =>
           of(
@@ -367,7 +374,7 @@ export const killKernelEpic = (
   );
 
 export const restartWebSocketKernelEpic = (
-  action$: ActionsObservable<actions.RestartKernel>,
+  action$: Observable<actions.RestartKernel>,
   state$: StateObservable<AppState>
 ) =>
   action$.pipe(
@@ -430,13 +437,7 @@ export const restartWebSocketKernelEpic = (
       const id = kernel.id;
 
       return kernels.restart(serverConfig, id).pipe(
-        mergeMap<
-          AjaxResponse,
-          | actions.RestartKernelFailed
-          | actions.RestartKernelSuccessful
-          | actions.ExecuteAllCells
-          | actions.ClearAllOutputs
-        >((response: AjaxResponse) => {
+        mergeMap((response: AjaxResponse) => {
           if (response.status !== 200) {
             return of(
               actions.restartKernelFailed({

@@ -9,7 +9,7 @@ import { entities } from "./entities";
 
 // TODO: This can be removed once the work to rely on deriving KernelRefs
 // ContentRefs is complete.
-const kernelRef = (state = "", action: Action) => {
+export const kernelRef = (state = "", action: Action) => {
   let typedAction;
   switch (action.type) {
     case actions.LAUNCH_KERNEL:
@@ -28,7 +28,7 @@ const kernelRef = (state = "", action: Action) => {
   }
 };
 
-const currentKernelspecsRef = (state = "", action: Action) => {
+export const currentKernelspecsRef = (state = "", action: Action) => {
   switch (action.type) {
     case actions.FETCH_KERNELSPECS:
       const typedAction = action as actions.FetchKernelspecs;

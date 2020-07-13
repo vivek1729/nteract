@@ -2,7 +2,7 @@ import { Subject, Subscriber } from "rxjs";
 import { ajax } from "rxjs/ajax";
 import { webSocket } from "rxjs/webSocket";
 import urljoin from "url-join";
-import URLSearchParams from "url-search-params";
+import URLSearchParams from "@ungap/url-search-params";
 import { createAJAXSettings } from "./base";
 
 import { ServerConfig } from "@nteract/types";
@@ -147,7 +147,8 @@ export const connect = (
 ): Subject<any> => {
   const wsSubject = webSocket<JupyterMessage>({
     url: formWebSocketURL(serverConfig, kernelID, sessionID),
-    protocol: serverConfig.wsProtocol
+    protocol: serverConfig.wsProtocol,
+    closeObserver: serverConfig.closeObserver
   });
 
   // Create a subject that does some of the handling inline for the session

@@ -1,5 +1,6 @@
 ## Overview
 
+
 Edit code, write prose, visualize data!
 
 ![nteract geojson](https://cloud.githubusercontent.com/assets/836375/18421299/d95ad398-783b-11e6-8b23-d54cf7caad1e.png)
@@ -20,5 +21,13 @@ nteract is a literate coding environment that supports Python, R, JavaScript and
 * Grow an ecosystem of tooling to allow others to build their own platforms relying on the Jupyter specifications ✅
 
 ## Installation - Users
+
+#### Linux
+
+
+[![Get it from the Snap Store](https://snapcraft.io/static/images/badges/en/snap-store-white.svg)](https://snapcraft.io/nteract)
+
+
+#### Other
 
 Head to the [Releases](https://github.com/nteract/nteract/releases/latest) page and download the version for your OS.

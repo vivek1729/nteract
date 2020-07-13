@@ -1,5 +1,6 @@
 // jmp does not publish type definitions. Provide a skeleton here just to
 // keep TS happy
+
 declare module "jmp" {
   import zmq from "zeromq";
 
@@ -32,9 +33,9 @@ declare module "jmp" {
   }
 
   export class Socket extends zmq.Socket {
-    constructor(socketType: string | number, scheme?: string, key?: string);
 
     type: string;
+    constructor(socketType: string | number, scheme?: string, key?: string);
 
     send(message: Message | string | Buffer | any[], flags?: number): this;
 
@@ -46,5 +47,8 @@ declare module "jmp" {
     removeAllListeners(): this;
 
     close(): this;
+
+    // inherited from NodeJS.EventEmitter, but tsc sometimes misses that...
+    on(event: string | symbol, listener: (...args: any[]) => void): this;
   }
 }

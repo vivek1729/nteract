@@ -1,31 +1,13 @@
 import { epics as coreEpics } from "@nteract/core";
-import { ActionsObservable, Epic, StateObservable } from "redux-observable";
+import { Epic, StateObservable } from "redux-observable";
 import { Observable } from "rxjs";
 import { catchError, startWith } from "rxjs/operators";
-import { DesktopNotebookAppState } from "../state";
-
-import { closeNotebookEpic } from "./close-notebook";
-import {
-  loadConfigEpic,
-  saveConfigEpic,
-  saveConfigOnChangeEpic
-} from "./config";
-import { publishEpic } from "./github-publish";
-import {
-  fetchContentEpic,
-  launchKernelWhenNotebookSetEpic,
-  newNotebookEpic
-} from "./loading";
-import { saveAsEpic, saveEpic } from "./saving";
-import {
-  interruptKernelEpic,
-  killKernelEpic,
-  launchKernelByNameEpic,
-  launchKernelEpic,
-  watchSpawn
-} from "./zeromq-kernels";
-
 import { Actions } from "../actions";
+import { DesktopNotebookAppState } from "../state";
+import { closeNotebookEpic } from "./close-notebook";
+import { publishEpic } from "./github-publish";
+import { newNotebookEpic } from "./loading";
+import { interruptKernelEpic, killKernelEpic, launchKernelByNameEpic, launchKernelEpic, watchSpawn } from "./zeromq-kernels";
 
 export function retryAndEmitError(err: Error, source: Observable<Actions>) {
   console.error(err);
@@ -34,7 +16,7 @@ export function retryAndEmitError(err: Error, source: Observable<Actions>) {
 
 export const wrapEpic = (epic: Epic<Actions, Actions>) => (
   ...args: [
-    ActionsObservable<Actions>,
+    Observable<Actions>,
     StateObservable<DesktopNotebookAppState>,
     undefined
   ]
@@ -48,24 +30,24 @@ const epics = [
   coreEpics.updateDisplayEpic,
   coreEpics.commListenEpic,
   coreEpics.executeAllCellsEpic,
+  coreEpics.executeFocusedCellEpic,
   coreEpics.updateContentEpic,
+  coreEpics.saveContentEpic,
+  coreEpics.saveAsContentEpic,
+  coreEpics.fetchContentEpic,
   coreEpics.autoSaveCurrentContentEpic,
   coreEpics.sendInputReplyEpic,
+  coreEpics.executeCellAfterKernelLaunchEpic,
+  coreEpics.sendExecuteRequestEpic,
+  coreEpics.lazyLaunchKernelEpic,
 
-  launchKernelWhenNotebookSetEpic,
   watchSpawn,
   publishEpic,
-  saveEpic,
-  saveAsEpic,
-  fetchContentEpic,
   newNotebookEpic,
   launchKernelEpic,
   launchKernelByNameEpic,
   interruptKernelEpic,
   killKernelEpic,
-  loadConfigEpic,
-  saveConfigEpic,
-  saveConfigOnChangeEpic,
   closeNotebookEpic
 ];
 

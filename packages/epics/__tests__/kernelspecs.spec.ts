@@ -1,8 +1,9 @@
-import { ActionsObservable } from "redux-observable";
-import { toArray } from "rxjs/operators";
-
 import { fetchKernelspecs } from "@nteract/actions";
-import { fetchKernelspecsEpic } from "../src/kernelspecs";
+import { JupyterHostRecordProps } from "@nteract/types";
+import { of } from "rxjs";
+
+import { toArray } from "rxjs/operators";
+import { fetchKernelspecsEpic } from "../src";
 
 describe("fetchKernelspecsEpic", () => {
   test("calls kernelspecs.list with appropriate jupyter host config", done => {
@@ -10,22 +11,18 @@ describe("fetchKernelspecsEpic", () => {
       kernelspecsRef: "fake",
       hostRef: "alsoFake"
     });
-    const action$ = ActionsObservable.of(action);
+    const action$ = of(action);
     const state$ = {
       value: {
         app: {
           host: {
             type: "jupyter",
-            kernelRef: null,
-            id: null,
-            selectedKernelRef: null,
-            kernelspecsRef: null,
-            defaultKernelName: null,
-            activeKernelRefs: [],
             token: "x-x-x",
-            serverUrl: "http://localhost:8888/",
-            crossDomain: false
-          }
+            origin: "http://localhost:8888/",
+            basePath: "",
+            bookstoreEnabled: false,
+            showHeaderEditor: false,
+          } as JupyterHostRecordProps
         }
       }
     };

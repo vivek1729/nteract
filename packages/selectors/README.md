@@ -38,7 +38,7 @@ console.log(`Rendering ${currentModal} modal using ${theme} theme.`);
 
 ## Documentation
 
-You can view the reference documentation for `@nteract/selectors` in the [package docs](https://packages.nteract.io/modules/selectors).
+You can view the reference documentation for `@nteract/selectors` in the [package docs](https://packages.nteract.io/modules/selectors.html).
 
 ## Support
 

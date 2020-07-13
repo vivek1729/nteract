@@ -1,0 +1,5 @@
+site_name: nteract/ations
+
+nav:
+  - Overview: "overview.md"
+  - Examples: "examples.md"

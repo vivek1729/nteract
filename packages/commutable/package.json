@@ -1,6 +1,6 @@
 {
   "name": "@nteract/commutable",
-  "version": "7.1.4",
+  "version": "7.3.0",
   "description": "library for immutable notebook operations",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -19,9 +19,9 @@
   "license": "BSD-3-Clause",
   "dependencies": {
     "immutable": "^4.0.0-rc.12",
-    "uuid": "^3.1.0"
+    "uuid": "^8.0.0"
   },
   "devDependencies": {
-    "@types/uuid": "^3.4.4"
+    "@types/uuid": "^8.0.0"
   }
 }

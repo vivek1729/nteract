@@ -5,7 +5,8 @@ import {
   state as stateModule
 } from "@nteract/core";
 import * as Immutable from "immutable";
-import { ActionsObservable } from "redux-observable";
+import { of } from "rxjs";
+
 import { toArray } from "rxjs/operators";
 import { TestScheduler } from "rxjs/testing";
 
@@ -16,6 +17,8 @@ import {
   DESKTOP_NOTEBOOK_CLOSING_NOT_STARTED,
   DESKTOP_NOTEBOOK_CLOSING_READY_TO_CLOSE
 } from "../../../src/notebook/state";
+
+jest.mock("fs");
 
 const buildScheduler = () =>
   new TestScheduler((actual, expected) => expect(actual).toEqual(expected));
@@ -68,7 +71,7 @@ describe("closeNotebookEpic", () => {
 
       const state = buildState(true);
       const responses = await closeNotebookEpic(
-        ActionsObservable.of(
+        of(
           actions.closeNotebook({ contentRef: "contentRef1" })
         ),
         { value: state }
@@ -108,7 +111,7 @@ describe("closeNotebookEpic", () => {
 
       const state = buildState(true);
       const responses = await closeNotebookEpic(
-        ActionsObservable.of(
+        of(
           actions.closeNotebook({ contentRef: "contentRef1" })
         ),
         { value: state }
@@ -227,25 +230,38 @@ describe("closeNotebookEpic", () => {
   });
 
   test("update close progress state and trigger window.close", async () => {
-    window.close = jest.fn();
-
     const state = buildState(false);
-    const responses = await closeNotebookEpic(
-      ActionsObservable.of(
-        actions.closeNotebook({ contentRef: "contentRef1" })
-      ),
-      { value: state }
-    )
-      .pipe(toArray())
-      .toPromise();
 
-    expect(responses).toEqual([
-      coreActions.killKernel({ kernelRef: "kernelRef1", restarting: false }),
-      actions.closeNotebookProgress({
-        newState: DESKTOP_NOTEBOOK_CLOSING_READY_TO_CLOSE
-      })
-    ]);
+    const testScheduler = buildScheduler();
+    testScheduler.run(helpers => {
+      const { hot, expectObservable } = helpers;
+      const inputActions = {
+        a: actions.closeNotebook({
+          contentRef: "contentRef1",
+          reloading: false
+        }),
+        b: coreActions.killKernelSuccessful({ kernelRef: "kernelRef1" })
+      };
 
-    expect(window.close).toBeCalled();
+      const outputActions = {
+        c: coreActions.killKernel({
+          kernelRef: "kernelRef1",
+          restarting: false
+        }),
+        d: actions.closeNotebookProgress({
+          newState: DESKTOP_NOTEBOOK_CLOSING_READY_TO_CLOSE
+        })
+      };
+
+      const inputMarbles = "a b";
+      const outputMarbles = "c d";
+
+      const inputAction$ = hot(inputMarbles, inputActions);
+      const outputAction$ = closeNotebookEpic(inputAction$, { value: state });
+
+      expectObservable(outputAction$).toBe(outputMarbles, outputActions);
+
+      expect(window.close).toBeCalled();
+    });
   });
 });

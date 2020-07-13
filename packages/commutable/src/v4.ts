@@ -35,11 +35,6 @@ import {
   makeRawCell
 } from "./cells";
 import {
-  ImmutableNotebook,
-  makeNotebookRecord,
-  NotebookRecordParams
-} from "./notebook";
-import {
   createImmutableOutput,
   ImmutableOutput,
   OnDiskOutput
@@ -53,7 +48,13 @@ import {
   MultiLineString,
   remultiline
 } from "./primitives";
-import { appendCell, CellStructure } from "./structures";
+import {
+  appendCell,
+  CellStructure,
+  ImmutableNotebook,
+  makeNotebookRecord,
+  NotebookRecordParams
+} from "./structures";
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
  *                              Cell Types
@@ -195,7 +196,7 @@ function metadataToJS(immMetadata: ImmutableMap<string, any>): JSONObject {
   return immMetadata.toJS() as JSONObject;
 }
 
-function outputToJS(output: ImmutableOutput): OnDiskOutput {
+export function outputToJS(output: ImmutableOutput): OnDiskOutput {
   switch (output.output_type) {
     case "execute_result":
       return {
@@ -275,7 +276,7 @@ function rawCellToJS(immCell: ImmutableRawCell): RawCell {
  *
  * @returns A JSON representation of the same cell.
  */
-function cellToJS(immCell: ImmutableCell): Cell {
+export function cellToJS(immCell: ImmutableCell): Cell {
   switch (immCell.cell_type) {
     case "markdown":
       return markdownCellToJS(immCell);
@@ -302,9 +303,17 @@ export function toJS(immnb: ImmutableNotebook): NotebookV4 {
     [key: string]: ImmutableCell;
   } = plainNotebook.cellMap.toObject();
 
-  const cells = plainCellOrder.map((cellId: string) =>
-    cellToJS(plainCellMap[cellId])
-  );
+  const cells = plainCellOrder
+    .filter(
+      (cellId: string) =>
+        !plainCellMap[cellId].getIn([
+          "metadata",
+          "nteract",
+          "transient",
+          "deleting"
+        ])
+    )
+    .map((cellId: string) => cellToJS(plainCellMap[cellId]));
 
   return {
     cells,

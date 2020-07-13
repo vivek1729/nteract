@@ -1,59 +1,19 @@
-import { Notebook } from "@nteract/commutable";
 import querystring from "querystring";
 import { Observable } from "rxjs";
 import { ajax, AjaxResponse } from "rxjs/ajax";
 import urljoin from "url-join";
-import { ServerConfig } from "@nteract/types";
+import { ServerConfig, IGetParams, IContent, FileType, IContentProvider } from "@nteract/types";
 import { createAJAXSettings, JupyterAjaxResponse } from "./base";
+import { mergeMap } from "rxjs/operators";
 
 const formURI = (path: string) => urljoin("/api/contents/", path);
 
 const formCheckpointURI = (path: string, checkpointID: string) =>
   urljoin("/api/contents/", path, "checkpoints", checkpointID);
 
-export type FileType = "directory" | "file" | "notebook";
-
 /*********************************************
  * Contents API request and response payloads
  *********************************************/
-
-/**
- * Just the Stat call portion of the contents API
- * (no content property)
- */
-export interface IStatContent<FT extends FileType = FileType> {
-  name: string;
-  path: string;
-  type: FT;
-  writable: boolean;
-  created: string;
-  last_modified: string;
-  mimetype: string;
-  format: string;
-}
-
-/**
- * For directory listings and when a GET is performed against content with ?content=0
- * the content field is null
- */
-export interface IEmptyContent<FT extends FileType = FileType>
-  extends IStatContent<FT> {
-  content: null;
-}
-
-/**
- * Full Payloads from the contents API
- */
-export interface IContent<FT extends FileType = FileType>
-  extends IStatContent<FT> {
-  content: FT extends "file"
-    ? string
-    : FT extends "notebook"
-    ? Notebook
-    : FT extends "directory"
-    ? Array<IEmptyContent<FT>>
-    : null;
-}
 
 /**
  * Creates an AjaxObservable for removing content.
@@ -69,12 +29,6 @@ export const remove = (serverConfig: ServerConfig, path: string) =>
       method: "DELETE"
     })
   );
-
-interface IGetParams {
-  type: "file" | "directory" | "notebook";
-  format: "text" | "base64" | string;
-  content: 0 | 1;
-}
 
 /**
  * Creates an AjaxObservable for getting content at a path
@@ -118,7 +72,7 @@ export function get(
 export function update<FT extends FileType>(
   serverConfig: ServerConfig,
   path: string,
-  model: Partial<IContent>
+  model: Partial<IContent<FT>>
 ) {
   return ajax(
     createAJAXSettings(serverConfig, formURI(path), {
@@ -256,3 +210,73 @@ export const restoreFromCheckpoint = (
       method: "POST"
     })
   );
+
+/**
+ * IContentProvider implementation for Jupyter content server.
+ */
+export const JupyterContentProvider: IContentProvider = {
+  remove(serverConfig: ServerConfig, path: string) {
+    return remove(serverConfig, path);
+  },
+  
+  get(serverConfig: ServerConfig, path: string, params: Partial<IGetParams>) {
+    return get(serverConfig, path, params);
+  },
+
+  update<FT extends FileType>(serverConfig: ServerConfig, path: string, model: Partial<IContent<FT>>) {
+    return update(serverConfig, path, model);
+  },
+
+  create<FT extends FileType>(serverConfig: ServerConfig, path: string, model: Partial<IContent<FT>> & { type: FT }) {
+    return create(serverConfig, path, model);
+  },
+
+  save<FT extends FileType>(serverConfig: ServerConfig, path: string, model: Partial<IContent<FT>>) {
+    return save(serverConfig, path, model)
+      .pipe(
+        mergeMap(async (saveXhr: AjaxResponse) => {
+          if (saveXhr.response.errno) {
+            return saveXhr;
+          }
+
+          const pollIntervalMs = 500;
+          const maxPollNb = 4;
+
+          // Last_modified value from jupyter server is unreliable:
+          // https://github.com/nteract/nteract/issues/4583
+          // Check last-modified until value is stable.
+          for (let i = 0; i < maxPollNb; ++i) {
+            await new Promise(resolve => setTimeout(resolve, pollIntervalMs));
+            const getXhr: AjaxResponse = await get(serverConfig, path, { content: 0 }).toPromise();
+            if (
+              getXhr.status === 200 &&
+              typeof getXhr.response !== "string" &&
+              getXhr.response.last_modified &&
+              Date.parse(getXhr.response.last_modified) > Date.parse(saveXhr.response.last_modified)
+            ) {
+              // Found a newer last_modified
+              saveXhr.response.last_modified = getXhr.response.last_modified;
+              return saveXhr;
+            }
+          }
+          return saveXhr;
+        })
+      );
+  },
+
+  listCheckpoints(serverConfig: ServerConfig, path: string) {
+    return listCheckpoints(serverConfig, path);
+  },
+
+  createCheckpoint(serverConfig: ServerConfig, path: string) {
+    return createCheckpoint(serverConfig, path);
+  },
+
+  deleteCheckpoint(serverConfig: ServerConfig, path: string, checkpointID: string) {
+    return deleteCheckpoint(serverConfig, path, checkpointID);
+  },
+
+  restoreFromCheckpoint(serverConfig: ServerConfig, path: string, checkpointID: string) {
+    return restoreFromCheckpoint(serverConfig, path, checkpointID);
+  }
+}

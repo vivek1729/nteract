@@ -1,67 +1,34 @@
-import { stringifyNotebook, toJS } from "@nteract/commutable";
-import { Notebook } from "@nteract/commutable";
-import FileSaver from "file-saver";
-import { Action } from "redux";
-import { ofType } from "redux-observable";
-import { ActionsObservable, StateObservable } from "redux-observable";
-import { contents } from "rx-jupyter";
-import { empty, from, interval, Observable, of } from "rxjs";
-import {
-  catchError,
-  concatMap,
-  distinctUntilChanged,
-  map,
-  mergeMap,
-  pluck,
-  switchMap,
-  tap
-} from "rxjs/operators";
-
 import * as actions from "@nteract/actions";
+import { Notebook, stringifyNotebook, toJS } from "@nteract/commutable";
+import { defineConfigOption } from "@nteract/mythic-configuration";
+import { sendNotification } from "@nteract/mythic-notifications";
 import * as selectors from "@nteract/selectors";
-import {
-  AppState,
-  ContentRef,
-  DirectoryContentRecordProps,
-  DummyContentRecordProps,
-  FileContentRecordProps,
-  NotebookContentRecordProps,
-  ServerConfig
-} from "@nteract/types";
+import { AppState, ContentRef, createKernelRef, DirectoryContentRecordProps, DummyContentRecordProps, FileContentRecordProps, IContent, IContentProvider, JupyterHostRecord, NotebookContentRecordProps, ServerConfig } from "@nteract/types";
+import FileSaver from "file-saver";
+import { RecordOf } from "immutable";
+import * as path from "path";
+import { Action } from "redux";
+import { ofType, StateObservable } from "redux-observable";
+import { EMPTY, from, interval, Observable, of } from "rxjs";
 import { AjaxResponse } from "rxjs/ajax";
-
+import { catchError, filter, map, mergeMap, switchMap, tap } from "rxjs/operators";
 import urljoin from "url-join";
 
-import { RecordOf } from "immutable";
-import { existsSync } from "fs";
-
 export function updateContentEpic(
-  action$: ActionsObservable<actions.ChangeContentName>,
-  state$: StateObservable<AppState>
-): Observable<{}> {
+  action$: Observable<actions.ChangeContentName>,
+  state$: StateObservable<AppState>,
+  dependencies: { contentProvider: IContentProvider }
+): Observable<unknown> {
   return action$.pipe(
     ofType(actions.CHANGE_CONTENT_NAME),
     switchMap(action => {
-      if (!action.payload || typeof action.payload.filepath !== "string") {
-        return of({
-          type: "ERROR",
-          error: true,
-          payload: { error: new Error("updating content needs a payload") }
-        }) as any;
-      }
+      const state = state$.value;
+      const { filepath, prevFilePath } = action.payload;
 
-      const state: any = state$.value;
-      const host: any = selectors.currentHost(state);
-
-      // Dismiss any usage that isn't targeting a jupyter server
-      if (host.type !== "jupyter") {
-        return empty();
-      }
-
-      const { contentRef, filepath, prevFilePath } = action.payload;
+      const host = selectors.currentHost(state) as JupyterHostRecord;
       const serverConfig: ServerConfig = selectors.serverConfig(host);
 
-      return contents
+      return dependencies.contentProvider
         .update(serverConfig, prevFilePath, { path: filepath.slice(1) })
         .pipe(
           tap(xhr => {
@@ -90,7 +57,7 @@ export function updateContentEpic(
           catchError((xhrError: any) =>
             of(
               actions.changeContentNameFailed({
-                basepath: host.basepath,
+                basepath: host.basePath,
                 filepath: action.payload.filepath,
                 prevFilePath,
                 error: xhrError,
@@ -104,35 +71,22 @@ export function updateContentEpic(
 }
 
 export function fetchContentEpic(
-  action$: ActionsObservable<
+  action$: Observable<
     | actions.FetchContent
     | actions.FetchContentFailed
     | actions.FetchContentFulfilled
   >,
-  state$: StateObservable<AppState>
-): Observable<{}> {
+  state$: StateObservable<AppState>,
+  dependencies: { contentProvider: IContentProvider }
+): Observable<unknown> {
   return action$.pipe(
     ofType(actions.FETCH_CONTENT),
     switchMap(action => {
-      if (!action.payload || typeof action.payload.filepath !== "string") {
-        return of({
-          type: "ERROR",
-          error: true,
-          payload: { error: new Error("fetching content needs a payload") }
-        }) as any;
-      }
-
-      const state: any = state$.value;
-      const host: any = selectors.currentHost(state);
-
-      // Dismiss any usage that isn't targeting a jupyter server
-      if (host.type !== "jupyter") {
-        return empty();
-      }
-
+      const state = state$.value;
+      const host = selectors.currentHost(state) as JupyterHostRecord;
       const serverConfig: ServerConfig = selectors.serverConfig(host);
 
-      return contents
+      return dependencies.contentProvider
         .get(
           serverConfig,
           (action as actions.FetchContent).payload.filepath,
@@ -183,49 +137,44 @@ export function downloadString(
   FileSaver.saveAs(blob, filename);
 }
 
+const { selector: autoSaveInterval } = defineConfigOption({
+  key: "autoSaveInterval",
+  label: "Auto-save interval",
+  defaultValue: 120_000,
+});
+
 export function autoSaveCurrentContentEpic(
-  action$: ActionsObservable<Action>,
+  action$: Observable<Action>,
   state$: StateObservable<AppState>
 ): Observable<actions.Save> {
-  const state = state$.value;
-  const duration = selectors.autoSaveInterval(state);
-  return interval(duration).pipe(
+  return state$.pipe(
+    map(state => autoSaveInterval(state)),
+    switchMap(time => interval(time)),
     mergeMap(() => {
-      const contentRef$ = from(
+      const state = state$.value;
+      return from(
         selectors
           .contentByRef(state)
           .filter(
-            /**
+            /*
              * Only save contents that are files or notebooks with
              * a filepath already set.
              */
             content =>
               (content.type === "file" || content.type === "notebook") &&
-              content.filepath !== "" &&
-              selectors.isCurrentKernelZeroMQ(state)
-                ? existsSync(content.filepath)
-                : true
+              content.filepath !== ""
           )
           .keys()
       );
-
-      return contentRef$;
     }),
-    mergeMap((contentRef: ContentRef) =>
-      state$.pipe(
-        pluck(
-          "core",
-          "entities",
-          "contents",
-          "byRef",
-          contentRef,
-          "model",
-          "notebook"
-        ),
-        distinctUntilChanged(),
-        concatMap(() => of(actions.save({ contentRef })))
-      )
-    )
+    filter((contentRef: ContentRef) => {
+      const model = selectors.model(state$.value, { contentRef });
+      if (model && model.type === "notebook") {
+        return selectors.notebook.isDirty(model);
+      }
+      return false;
+    }),
+    map((contentRef: ContentRef) => actions.save({ contentRef }))
   );
 }
 
@@ -236,10 +185,13 @@ function serializeContent(
     | RecordOf<DummyContentRecordProps>
     | RecordOf<FileContentRecordProps>
     | RecordOf<DirectoryContentRecordProps>
-) {
+): {
+  saveModel: Partial<IContent<"file" | "notebook">> | null;
+  serializedData: Notebook | string | null;
+} {
   // This could be object for notebook, or string for files
   let serializedData: Notebook | string;
-  let saveModel: Partial<contents.IContent<"file" | "notebook">> = {};
+  let saveModel: Partial<IContent<"file" | "notebook">> = {};
   if (content.type === "notebook") {
     const appVersion = selectors.appVersion(state);
 
@@ -270,8 +222,9 @@ function serializeContent(
 }
 
 export function saveContentEpic(
-  action$: ActionsObservable<actions.Save | actions.DownloadContent>,
-  state$: StateObservable<AppState>
+  action$: Observable<actions.Save | actions.DownloadContent>,
+  state$: StateObservable<AppState>,
+  dependencies: { contentProvider: IContentProvider }
 ): Observable<
   | actions.DownloadContentFailed
   | actions.DownloadContentFulfilled
@@ -289,16 +242,6 @@ export function saveContentEpic(
         >
       | Observable<never> => {
       const state = state$.value;
-
-      const host = selectors.currentHost(state);
-      if (host.type !== "jupyter") {
-        return of(
-          actions.saveFailed({
-            error: new Error("Cannot save content if no host is set."),
-            contentRef: action.payload.contentRef
-          })
-        );
-      }
       const contentRef = action.payload.contentRef;
       const content = selectors.content(state, { contentRef });
 
@@ -342,7 +285,7 @@ export function saveContentEpic(
       switch (action.type) {
         case actions.DOWNLOAD_CONTENT: {
           // FIXME: Convert this to downloadString, so it works for
-          // both files & notebooks
+          //  both files & notebooks
           if (
             content.type === "notebook" &&
             typeof serializedData === "object"
@@ -363,7 +306,7 @@ export function saveContentEpic(
             );
           } else {
             // This shouldn't happen, is here for safety
-            return empty();
+            return EMPTY;
           }
           return of(
             actions.downloadContentFulfilled({
@@ -372,72 +315,51 @@ export function saveContentEpic(
           );
         }
         case actions.SAVE: {
+          const host = selectors.currentHost(state) as JupyterHostRecord;
           const serverConfig: ServerConfig = selectors.serverConfig(host);
 
-          // Check to see if the file was modified since the last time
-          // we saved.
-          return contents.get(serverConfig, filepath, { content: 0 }).pipe(
-            // Make sure that the modified time is within some delta
-            mergeMap(xhr => {
-              if (xhr.status !== 200) {
-                throw new Error(xhr.response.toString());
-              }
-              if (typeof xhr.response === "string") {
-                throw new Error(
-                  `jupyter server response invalid: ${xhr.response}`
-                );
-              }
-
-              const model = xhr.response;
-
-              const diskDate = new Date(model.last_modified);
-              const inMemoryDate = content.lastSaved
-                ? new Date(content.lastSaved)
-                : // FIXME: I'm unsure if we don't have a date if we should
-                  // default to the disk date
-                  diskDate;
-              const diffDate = diskDate.getTime() - inMemoryDate.getTime();
-
-              if (Math.abs(diffDate) > 600) {
+          return dependencies.contentProvider
+            .save(serverConfig, filepath, saveModel)
+            .pipe(
+              mergeMap((saveXhr: AjaxResponse) => {
+                if (saveXhr.response.errno) {
+                  return of(
+                    actions.saveFailed({
+                      contentRef: action.payload.contentRef,
+                      error: saveXhr.response
+                    })
+                  );
+                }
                 return of(
-                  actions.saveFailed({
-                    error: new Error("open in another tab possibly..."),
-                    contentRef: action.payload.contentRef
+                  actions.saveFulfilled({
+                    contentRef: action.payload.contentRef,
+                    model: saveXhr.response
                   })
                 );
-              }
-
-              return contents.save(serverConfig, filepath, saveModel).pipe(
-                map((xhr: AjaxResponse) => {
-                  return actions.saveFulfilled({
-                    contentRef: action.payload.contentRef,
-                    model: xhr.response
-                  });
-                }),
-                catchError((error: Error) =>
-                  of(
-                    actions.saveFailed({
-                      error,
-                      contentRef: action.payload.contentRef
-                    })
-                  )
+              }),
+              catchError((error: Error) =>
+                of(
+                  actions.saveFailed({
+                    error,
+                    contentRef: action.payload.contentRef
+                  })
                 )
-              );
-            })
-          );
+              )
+            );
         }
         default:
           // NOTE: Our ofType should prevent reaching here, this
           // is here merely as safety
-          return empty();
+          return EMPTY;
       }
     })
   );
 }
 
 export function saveAsContentEpic(
-  action$: ActionsObservable<actions.SaveAs>,
-  state$: StateObservable<AppState>
+  action$: Observable<actions.SaveAs>,
+  state$: StateObservable<AppState>,
+  dependencies: { contentProvider: IContentProvider }
 ): Observable<actions.SaveAsFailed | actions.SaveAsFulfilled> {
   return action$.pipe(
     ofType(actions.SAVE_AS),
@@ -445,16 +367,6 @@ export function saveAsContentEpic(
       | Observable<actions.SaveAsFailed | actions.SaveAsFulfilled>
       | Observable<never> => {
       const state = state$.value;
-
-      const host = selectors.currentHost(state);
-      if (host.type !== "jupyter") {
-        return of(
-          actions.saveAsFailed({
-            error: new Error("Cannot save content if no host is set."),
-            contentRef: action.payload.contentRef
-          })
-        );
-      }
       const contentRef = action.payload.contentRef;
       const content = selectors.content(state, { contentRef });
 
@@ -488,24 +400,97 @@ export function saveAsContentEpic(
         );
       }
 
-      const serverConfig: ServerConfig = selectors.serverConfig(host);
+      const host = selectors.currentHost(state) as JupyterHostRecord;
+      const serverConfig = selectors.serverConfig(host);
 
-      return contents.save(serverConfig, filepath, saveModel).pipe(
-        map((xhr: AjaxResponse) => {
-          return actions.saveAsFulfilled({
-            contentRef: action.payload.contentRef,
-            model: xhr.response
-          });
-        }),
-        catchError((error: Error) =>
-          of(
-            actions.saveAsFailed({
-              error,
-              contentRef: action.payload.contentRef
-            })
+      const kernelRef = selectors.kernelRefByContentRef(state, { contentRef });
+      const alertKernelChanged: any[] = [];
+
+      if (kernelRef) {
+        const kernel = selectors.kernel(state, { kernelRef });
+
+        if (kernel) {
+          const cwd = path.dirname(path.resolve(filepath));
+          if (cwd !== kernel.cwd) {
+            alertKernelChanged.push(
+              sendNotification.create({
+                title: "Notebook folder changed",
+                message:
+                  "The kernel executing your code thinks your notebook is still " +
+                  "in the old folder. Would you like to launch a new kernel in " +
+                  "the new folder?",
+                level: "warning",
+                action: {
+                  label: "Launch new kernel",
+                  callback(): void {
+                    if (window && (window as any).store) {
+                      (window as any).store.dispatch(
+                        actions.launchKernelByName({
+                          kernelSpecName: kernel.kernelSpecName,
+                          cwd,
+                          kernelRef: createKernelRef(),
+                          selectNextKernel: true,
+                          contentRef
+                        })
+                      );
+                    }
+                  }
+                }
+              })
+            );
+          }
+        }
+      }
+
+      return dependencies.contentProvider
+        .save(serverConfig, filepath, saveModel)
+        .pipe(
+          mergeMap((xhr: AjaxResponse) => {
+            return of(
+              actions.changeFilename({
+                contentRef: action.payload.contentRef,
+                filepath
+              }),
+              actions.saveAsFulfilled({
+                contentRef: action.payload.contentRef,
+                model: xhr.response
+              }),
+              ...alertKernelChanged
+            );
+          }),
+          catchError((error: Error) =>
+            of(
+              actions.saveAsFailed({
+                error,
+                contentRef: action.payload.contentRef
+              })
+            )
           )
-        )
-      );
+        );
     })
+  );
+}
+
+export function closeNotebookEpic(
+  action$: Observable<actions.CloseNotebook>,
+  state$: StateObservable<AppState>
+): Observable<actions.DisposeContent | actions.KillKernelAction> {
+  return action$.pipe(
+    ofType(actions.CLOSE_NOTEBOOK),
+    mergeMap(
+      (
+        action: actions.CloseNotebook
+      ): Observable<actions.DisposeContent | actions.KillKernelAction> => {
+        const state = state$.value;
+        const contentRef = action.payload.contentRef;
+        const kernelRef = selectors.kernelRefByContentRef(state, {
+          contentRef
+        });
+        return of(
+          actions.disposeContent({ contentRef }),
+          actions.killKernel({ kernelRef, restarting: false, dispose: true })
+        );
+      }
+    )
   );
 }

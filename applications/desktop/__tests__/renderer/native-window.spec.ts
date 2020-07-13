@@ -85,3 +85,40 @@ describe("createTitleFeed", () => {
     });
   });
 });
+
+describe("initNativeHandlers", () => {
+  it("initiates listening to createTitleFeed", () => {
+    const contentRef = stateModule.createContentRef();
+    const kernelRef = stateModule.createKernelRef();
+
+    const state = {
+      core: stateModule.makeStateRecord({
+        kernelRef,
+        entities: stateModule.makeEntitiesRecord({
+          contents: stateModule.makeContentsRecord({
+            byRef: Immutable.Map({
+              [contentRef]: stateModule.makeNotebookContentRecord({
+                filepath: "titled.ipynb"
+              })
+            })
+          }),
+          kernels: stateModule.makeKernelsRecord({
+            byRef: Immutable.Map({
+              [kernelRef]: stateModule.makeRemoteKernelRecord({
+                status: "not connected"
+              })
+            })
+          })
+        })
+      }),
+      app: stateModule.makeAppRecord()
+    };
+
+    const store = {
+      getState: () => state
+    };
+
+    nativeWindow.initNativeHandlers(contentRef, store);
+    expect(remote.getCurrentWindow).toBeCalled();
+  });
+});

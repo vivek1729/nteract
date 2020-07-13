@@ -40,10 +40,7 @@
     "no-var-requires": {
       "severity": "warn"
     },
-    "object-literal-sort-keys": {
-      "options": "match-declaration-order",
-      "severity": "warn"
-    },
+    "object-literal-sort-keys": false,
     "only-arrow-functions": [true, "allow-declarations"],
     "ordered-imports": true,
     "prefer-template": true,
@@ -57,8 +54,6 @@
     "strict-type-predicates": true,
     "typedef": [
       true,
-      "call-signature",
-      "parameter",
       "member-variable-declaration"
     ],
     "variable-name": [true, "ban-keywords"]

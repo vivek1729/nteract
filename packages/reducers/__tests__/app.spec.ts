@@ -41,34 +41,6 @@ describe("saveFulfilled", () => {
   });
 });
 
-describe("setNotificationSystem", () => {
-  test("returns the same originalState if notificationSystem is undefined", () => {
-    const originalState = stateModule.makeAppRecord();
-
-    const action = {
-      type: actions.SET_NOTIFICATION_SYSTEM,
-      payload: {}
-      // Override action type to test reducer handling old behavior
-    } as actions.SetNotificationSystemAction;
-
-    const state = reducers.app(originalState, action);
-    expect(state.notificationSystem).toEqual(originalState.notificationSystem);
-  });
-  test("sets the notificationSystem if given", () => {
-    const originalState = stateModule.makeAppRecord();
-
-    const action = {
-      type: actions.SET_NOTIFICATION_SYSTEM,
-      payload: {
-        notificationSystem: { test: true }
-      }
-    };
-
-    const state = reducers.app(originalState, (action as unknown) as any);
-    expect(state.notificationSystem).toBe(action.payload.notificationSystem);
-  });
-});
-
 describe("setGithubToken", () => {
   test("calls setGithubToken", () => {
     const originalState = stateModule.makeAppRecord({
@@ -93,7 +65,7 @@ describe("setAppHost", () => {
 
     const action: SetAppHostAction = {
       type: actions.SET_APP_HOST,
-      payload: makeLocalHostRecord({ id: "anid" })
+      payload: { host: makeLocalHostRecord({ id: "anid" }) }
     };
 
     const state = reducers.app(originalState, action);
@@ -108,11 +80,19 @@ describe("setAppHost", () => {
 
     const action: SetAppHostAction = {
       type: actions.SET_APP_HOST,
-      payload: makeJupyterHostRecord({ id: "anotherid" })
+      payload: { host: makeJupyterHostRecord({ id: "anotherid" }) }
     };
 
     const state = reducers.app(originalState, action);
     expect(state.host.get("type")).toBe("jupyter");
     expect(state.host.get("id")).toBe("anotherid");
   });
+});
+
+describe("it does not change state for out-of-scope actions", () => {
+  const originalState = stateModule.makeAppRecord({});
+  const action = actions.killKernel({ restarting: false, kernelRef: "test" });
+
+  const state = reducers.app(originalState, action);
+  expect(state).toEqual(originalState);
 });

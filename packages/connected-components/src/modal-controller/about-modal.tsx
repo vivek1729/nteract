@@ -14,7 +14,7 @@ import styled from "styled-components";
 export interface Props {
   appVersion?: string;
   hostType: "local" | "empty" | "jupyter" | null;
-  closeModal?: () => void;
+  closeModal?: typeof actions.closeModal;
 }
 
 // We need to do this so that you can immediately `Escape` out of the dialog.
@@ -152,10 +152,7 @@ const mapDispatchToProps = {
   closeModal: actions.closeModal
 };
 
-const AboutModal = connect(
-  mapStateToProps,
-  mapDispatchToProps
-)(PureAboutModal);
+const AboutModal = connect(mapStateToProps, mapDispatchToProps)(PureAboutModal);
 
 // We export this for testing purposes.
 export { PureAboutModal };

@@ -185,7 +185,7 @@ export const PureNewNotebookNavigation = (props: {
   </Banner>
 );
 
-const makeMapStateToProps = (initialState: AppState) => {
+export const makeMapStateToProps = (initialState: AppState) => {
   let cachedAvailableKernels = Immutable.List();
 
   // To know whether we need to cache a new value

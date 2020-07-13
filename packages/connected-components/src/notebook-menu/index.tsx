@@ -11,12 +11,13 @@ import {
 } from "@nteract/types";
 import { RecordOf } from "immutable";
 import { connect } from "react-redux";
+import { Dispatch } from "redux";
 
 // Local modules
 import { MODAL_TYPES } from "../modal-controller";
 import PureNotebookMenu from "./PureNotebookMenu";
 
-function makeMapStateToProps(
+export function makeMapStateToProps(
   initialState: AppState,
   initialProps: { contentRef: ContentRef }
 ) {
@@ -64,11 +65,11 @@ function makeMapStateToProps(
   return mapStateToProps;
 }
 
-function makeMapDispatchToProps(
-  initialState: AppState,
+export function makeMapDispatchToProps(
+  initialDispatch: Dispatch,
   initialProps: { contentRef: ContentRef }
 ) {
-  const mapDispatchToProps = (dispatch: any) => ({
+  const mapDispatchToProps = (dispatch: Dispatch) => ({
     onPublish: (payload: { contentRef: string }) =>
       dispatch(actions.publishToBookstore(payload)),
     toggleNotebookHeaderEditor: (payload: { contentRef: string }) =>
@@ -107,7 +108,6 @@ function makeMapDispatchToProps(
       to: CellType;
       contentRef: string;
     }) => dispatch(actions.changeCellType(payload)),
-    setTheme: (theme: string) => dispatch(actions.setTheme(theme)),
     openAboutModal: () =>
       dispatch(actions.openModal({ modalType: MODAL_TYPES.ABOUT })),
     changeKernelByName: (payload: {
