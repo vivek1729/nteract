@@ -158,6 +158,7 @@
     "@types/lodash.throttle": "^4.1.6",
     "electron": "5.0.13",
     "file-loader": "^6.0.0",
-    "utility-types": "^3.10.0"
+    "utility-types": "^3.10.0",
+    "monaco-editor-webpack-plugin": "1.7.0"
   }
 }

@@ -4,6 +4,7 @@ import { connect } from "react-redux";
 import { Dispatch } from "redux";
 
 import { actions, AppState, ContentRef, selectors } from "@nteract/core";
+import { editorComponent } from "../../../selectors/lib/core/editorComponents";
 
 const {
   selector: editorTypeConfig,
@@ -37,7 +38,7 @@ export interface EditorSlots {
 interface ComponentProps {
   id: string;
   contentRef: ContentRef;
-  children: EditorSlots;
+  children: EditorSlots | undefined;
 }
 
 interface StateProps {
@@ -46,6 +47,7 @@ interface StateProps {
   value: string;
   channels: any;
   kernelStatus: string;
+  editorComponent?: any;
 }
 
 interface DispatchProps {
@@ -57,25 +59,22 @@ type Props = ComponentProps & StateProps & DispatchProps;
 
 export class Editor extends React.PureComponent<Props> {
   render(): React.ReactNode {
-    const { editorType, children } = this.props;
+    const { editorComponent } = this.props;
 
-    const chosenEditor = children ? children[editorType] : undefined;
+    const chosenEditor = editorComponent ? React.createElement(editorComponent, {
+      id: this.props.id,
+      contentRef: this.props.contentRef,
+      editorType: this.props.editorType,
+      value: this.props.value,
+      editorFocused: this.props.editorFocused,
+      channels: this.props.channels,
+      kernelStatus: this.props.kernelStatus,
+      onChange: this.props.onChange,
+      onFocusChange: this.props.onFocusChange,
+      className: "nteract-cell-editor"
+    }) : null;
 
-    if (chosenEditor) {
-      return chosenEditor({
-        id: this.props.id,
-        contentRef: this.props.contentRef,
-        editorType: this.props.editorType,
-        value: this.props.value,
-        editorFocused: this.props.editorFocused,
-        channels: this.props.channels,
-        kernelStatus: this.props.kernelStatus,
-        onChange: this.props.onChange,
-        onFocusChange: this.props.onFocusChange,
-        className: "nteract-cell-editor"
-      });
-    }
-    return null;
+    return chosenEditor;
   }
 }
 
@@ -92,6 +91,7 @@ export const makeMapStateToProps = (
     let kernelStatus = "not connected";
     let value = "";
     const editorType = editorTypeConfig(state);
+    const editorComponent = selectors.editorComponent(state, {id: editorType});
 
     if (model && model.type === "notebook") {
       const cell = selectors.notebook.cellById(model, { id });
@@ -114,6 +114,7 @@ export const makeMapStateToProps = (
       channels,
       kernelStatus,
       editorType,
+      editorComponent
     };
   };
 

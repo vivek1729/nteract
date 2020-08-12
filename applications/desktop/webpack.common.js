@@ -2,6 +2,7 @@ const path = require("path");
 
 const webpack = require("webpack");
 const configurator = require("@nteract/webpack-configurator");
+const MonacoWebpackPlugin = require("monaco-editor-webpack-plugin");
 
 const nodeModules = {
   jmp: "commonjs jmp",
@@ -39,7 +40,12 @@ const mainConfig = {
     extensions: [".js", ".jsx", ".ts", ".tsx"],
     alias: configurator.mergeDefaultAliases(),
   },
-  plugins: [new webpack.IgnorePlugin(/\.(css|less)$/)],
+  plugins: [
+    new webpack.IgnorePlugin(/\.(css|less)$/),
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1
+    })
+  ],
 };
 
 const rendererConfig = {
@@ -52,6 +58,7 @@ const rendererConfig = {
     path: path.join(__dirname, "lib"),
     chunkFilename: "[name].bundle.js",
     filename: "[name].js",
+    publicPath: path.join(__dirname, "lib"),
   },
   externals: nodeModules,
   module: {
@@ -68,11 +75,20 @@ const rendererConfig = {
         test: /\.(jpg|png|gif)$/,
         use: "file-loader",
       },
+      {
+        test: /\.ttf$/,
+        loader: 'file-loader',
+        options: {
+          name: '[name].[ext]',
+          publicPath: '../lib',
+          outputPath: '../lib'
+        },
+      }
     ],
   },
   resolve: {
     mainFields: ["nteractDesktop", "module", "main"],
-    extensions: [".js", ".jsx", ".ts", ".tsx"],
+    extensions: [".js", ".jsx", ".ts", ".tsx", ".ttf"],
     alias: {
       ...configurator.mergeDefaultAliases(),
       "styled-components": path.resolve(
@@ -83,7 +99,12 @@ const rendererConfig = {
       ),
     },
   },
-  plugins: [],
+  plugins: [
+    new MonacoWebpackPlugin(),
+    new webpack.optimize.LimitChunkCountPlugin({
+      maxChunks: 1
+    })
+  ],
 };
 
 module.exports = {

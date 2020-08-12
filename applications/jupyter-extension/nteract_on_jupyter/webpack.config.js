@@ -36,7 +36,8 @@ module.exports = {
       },
   target: "web",
   output: {
-    chunkFilename: isProd ? "[name]-[chunkhash].bundle.js" : "[name].bundle.js"
+    chunkFilename: isProd ? "[name]-[chunkhash].bundle.js" : "[name].bundle.js",
+    publicPath: "/nteract/static/dist/"
   },
   node: {
     fs: "empty"
