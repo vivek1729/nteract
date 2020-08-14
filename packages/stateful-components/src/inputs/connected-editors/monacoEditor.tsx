@@ -69,7 +69,6 @@ const makeMapStateToProps = (initialState: AppState, ownProps: ComponentProps) =
         }
       }
     const defaultEditorOptions = {
-      lineNumbers: "off",
       wordWrap,
       autoClosingBrackets: "never"
     }
@@ -84,6 +83,7 @@ const makeMapStateToProps = (initialState: AppState, ownProps: ComponentProps) =
       enableCompletion: true,
       shouldRegisterDefaultCompletion: true,
       indentSize: 4,
+      lineNumbers: false,
       tabSize: 4,
       options
     };

@@ -47,6 +47,7 @@ export interface IMonacoProps {
   value: string;
   editorType: string;
   editorFocused: boolean;
+  lineNumbers?: boolean;
   /** set height of editor to fit the specified number of lines in display */
   numberOfLines?: number;
   indentSize?: number;
@@ -158,6 +159,7 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
           autoFindInSelection: false // default is false
         },
         language: this.props.language,
+        lineNumbers: this.props.lineNumbers ? "on" : "off",
         minimap: {
           enabled: false
         },

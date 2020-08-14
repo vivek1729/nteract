@@ -93,7 +93,12 @@ export default class CodeCell extends React.Component<ComponentProps> {
     };
 
     const prompt = children?.prompt || defaults.prompt;
-    const editor = undefined;
+
+    /**
+     * We don't set the editor slots as defaults to support dynamic imports
+     * Users can continue to add the editorSlots as children
+     */
+    const editor = children?.editor;
     const pagers = children?.pagers || defaults.pagers;
     const inputPrompts = children?.pagers || defaults.inputPrompts;
     const outputs = children?.outputs || defaults.outputs;

@@ -8,8 +8,6 @@ const monacoEditorCommonProps = {
   id: "foo",
   contentRef: "bar",
   editorType: "monaco",
-  indentSize: 4,
-  tabSize: 4,
   theme: "vs",
   value: "test_value",
   enableCompletion: true,
@@ -167,7 +165,6 @@ describe("MonacoEditor lifeCycle methods set up", () => {
   });
 });
 
-/*
 describe("MonacoEditor lineNumbers configuration", () => {
   beforeAll(() => {
     jest.clearAllMocks();
@@ -176,20 +173,14 @@ describe("MonacoEditor lineNumbers configuration", () => {
     jest.clearAllMocks();
   });
   it("Should set lineNumbers on editor when set in props", () => {
-    const monacoPropsWithOptions = {
-      ...monacoEditorCommonProps,
-      options: {
-        lineNumbers: "on"
-      }
-    };
-
     mount(
       <MonacoEditor
-        {...monacoPropsWithOptions}
+        {...monacoEditorCommonProps}
         channels={undefined}
         onChange={jest.fn()}
         onFocusChange={jest.fn()}
         editorFocused={false}
+        lineNumbers={true}
       />
     );
     expect(mockCreateEditor).toHaveBeenCalledTimes(1);
@@ -207,6 +198,7 @@ describe("MonacoEditor lineNumbers configuration", () => {
         onChange={jest.fn()}
         onFocusChange={jest.fn()}
         editorFocused={false}
+        lineNumbers={false}
       />
     );
     expect(mockCreateEditor).toHaveBeenCalledTimes(1);
@@ -216,5 +208,3 @@ describe("MonacoEditor lineNumbers configuration", () => {
     expect(editorCreateArgs.lineNumbers).toEqual("off");
   });
 });
-
-*/

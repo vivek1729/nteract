@@ -4,7 +4,6 @@ import { connect } from "react-redux";
 import { Dispatch } from "redux";
 
 import { actions, AppState, ContentRef, selectors } from "@nteract/core";
-import { editorComponent } from "../../../selectors/lib/core/editorComponents";
 
 const {
   selector: editorTypeConfig,
@@ -59,9 +58,9 @@ type Props = ComponentProps & StateProps & DispatchProps;
 
 export class Editor extends React.PureComponent<Props> {
   render(): React.ReactNode {
-    const { editorComponent } = this.props;
+    const { editorComponent, editorType, children } = this.props;
 
-    const chosenEditor = editorComponent ? React.createElement(editorComponent, {
+    const editorProps = {
       id: this.props.id,
       contentRef: this.props.contentRef,
       editorType: this.props.editorType,
@@ -72,9 +71,25 @@ export class Editor extends React.PureComponent<Props> {
       onChange: this.props.onChange,
       onFocusChange: this.props.onFocusChange,
       className: "nteract-cell-editor"
-    }) : null;
+    };
 
-    return chosenEditor;
+    /**
+     * We filter on the children Editor Slots and render the correct editorType
+     */
+    if(children && children[editorType]){
+      const chosenEditor = children[editorType];
+      return chosenEditor(editorProps);
+    }
+
+    /**
+     * Fallback to the editor component stored in the state from dynamic import
+     * We'd eventually want to deprecate the static imports and move entirely to on-demand loading
+     */
+    else if(editorComponent){
+      return React.createElement(editorComponent, editorProps);
+    }
+
+    return null;
   }
 }
 

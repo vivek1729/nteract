@@ -16,7 +16,6 @@ export const byEditorType = (
         typedAction.payload.editorType,
         typedAction.payload.component
       );
-      return state;
     default:
       return state;
   }
