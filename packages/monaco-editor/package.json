@@ -19,16 +19,20 @@
   },
   "devDependencies": {
     "@types/lodash": "^4.14.117",
-    "@types/lodash.debounce": "^4.0.6"
+    "@types/lodash.debounce": "^4.0.6",
+    "styled-components": "^4.4.1"
   },
   "dependencies": {
-    "monaco-editor": "^0.20.0",
-    "monaco-editor-webpack-plugin": "^1.8.0"
+    "monaco-editor": "0.18.1",
+    "@nteract/messaging": "^7.0.8",
+    "@nteract/core": "^14.0.0",
+    "rxjs": "^6.3.3"
   },
   "peerDependencies": {
     "immutable": "^4.0.0-rc.12",
     "react": "^16.3.2",
-    "react-dom": "^16.3.2"
+    "react-dom": "^16.3.2",
+    "styled-components": ">= 4"
   },
   "author": "Kyle Kelley <rgbkrk@gmail.com>",
   "license": "BSD-3-Clause"

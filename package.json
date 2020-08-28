@@ -104,7 +104,8 @@
       "^@nteract/examples": "@nteract/examples",
       "^@nteract/([^/]*!octicons)$": "<rootDir>/packages/$1/src",
       "^(rx-binder)$": "<rootDir>/packages/$1/src",
-      "\\.css$": "<rootDir>/scripts/noop-module.ts"
+      "\\.css$": "<rootDir>/scripts/noop-module.ts",
+      "^(monaco-editor)$": "<rootDir>/node_modules/monaco-editor/esm/vs/editor/editor.api"
     },
     "coveragePathIgnorePatterns": [
       "<rootDir>/scripts",
@@ -114,7 +115,8 @@
       "js",
       "jsx",
       "ts",
-      "tsx"
+      "tsx",
+      "mjs"
     ],
     "snapshotSerializers": [
       "enzyme-to-json/serializer"
@@ -132,7 +134,7 @@
       "^.+\\.tsx?$": "ts-jest"
     },
     "transformIgnorePatterns": [
-      "node_modules/(?!@jupyter-widgets)"
+      "node_modules/(?!(monaco-editor|@jupyter-widgets)/)"
     ]
   },
   "lint-staged": {

@@ -159,7 +159,8 @@
     "@types/lodash.throttle": "^4.1.6",
     "electron": "7.3.2",
     "file-loader": "^6.0.0",
-    "utility-types": "^3.10.0"
+    "utility-types": "^3.10.0",
+    "monaco-editor-webpack-plugin": "1.7.0"
   },
   "resolutions": {
     "**/node-abi": "2.18.0",
