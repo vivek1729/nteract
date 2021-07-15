@@ -3,9 +3,7 @@ import { ImmutableNotebook } from "@nteract/commutable";
 import { ContentRef } from "@nteract/types";
 import { collaboration } from "../package";
 
-/**
- * Update entry of local id- remote id for a cell in the cellID Map
- */
+/** Update entry of local id to remote id for a cell in the cell ID mapping */
 export const updateCellMap = collaboration.createMyth("updateCellMap")<
   Partial<{
     localId: string;
@@ -26,9 +24,7 @@ export const updateCellMap = collaboration.createMyth("updateCellMap")<
   }
 });
 
-/**
- * Delete entry for local cell ID from the cellID Map
- */
+/** Delete entry for local cell ID from the cell ID mapping */
 export const deleteCellFromMap = collaboration.createMyth("deleteCellFromMap")<{ localId: string }>({
   reduce: (state, action) => {
     const { localId } = action.payload;
@@ -45,6 +41,7 @@ export const deleteCellFromMap = collaboration.createMyth("deleteCellFromMap")<{
   }
 });
 
+/** Initialize cell IDs mapping between local and remote notebooks. */
 export const initializeCellMap = collaboration.createMyth("initializeCellMap")<{
   notebook: ImmutableNotebook;
   contentRef: ContentRef;

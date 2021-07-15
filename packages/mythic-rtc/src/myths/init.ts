@@ -4,6 +4,10 @@ import { CollaborationDriver } from "../driver";
 import { collaboration } from "../package";
 import { ICollaborationBackend } from "../types";
 
+/**
+ * Initializes the collaboration package by creating the driver and recorder.
+ * Should be dispatched prior to joining a session.
+*/
 export const initCollaboration = collaboration.createMyth("init")<{
   store: Store<AppState>;
   backend: ICollaborationBackend;
