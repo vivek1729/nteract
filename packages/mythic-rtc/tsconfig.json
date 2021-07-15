@@ -1,0 +1,17 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+      // "importsNotUsedAsValues": "error",
+      "outDir": "lib",
+      "rootDir": "src",
+    },
+    "include": ["src"],
+    "references": [
+      { "path": "../actions" },
+      { "path": "../commutable" },
+      { "path": "../core" },
+      { "path": "../myths" },
+      { "path": "../selectors" },
+      { "path": "../types" }
+    ]
+  }
