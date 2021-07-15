@@ -1,1 +1,1 @@
-export { recordingMiddleware } from "./middleware";
+export { collaborationMiddleware } from "./middleware";

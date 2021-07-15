@@ -8,7 +8,7 @@
     "scripts": {},
     "repository": "https://github.com/nteract/nteract/tree/main/packages/mythic-rtc",
     "keywords": [
-      "nteract", "rtc"
+      "nteract", "rtc", "collaboration"
     ],
     "publishConfig": {
       "access": "public"

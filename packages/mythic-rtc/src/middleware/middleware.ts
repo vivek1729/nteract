@@ -4,25 +4,49 @@ import { actions as coreActions, selectors as coreSelectors, AppState } from "@n
 import { AnyAction, Dispatch, Store } from "redux";
 import {
   deleteCellFromMap,
-  initializeCellMap,
-  joinSession,
   recordCellContent,
   recordDeleteCell,
   recordInsertCell,
   updateCellMap
 } from "../myths";
 
-const handleFetchContent = (action: coreActions.FetchContentFulfilled, state: AppState) => {
-  const { filepath: filePath, model, contentRef, kernelRef, origin } = action.payload as any;
-  if (model.type !== "notebook") {
-    return null;
+/**
+ * The recording middleware intercepts notebook edits and forwards them as mythic actions
+ * for further processing.
+ * The main purpose of the middleware is to gather all necessary information from the store
+ * to successfully record an action by the myth.
+ */
+export const collaborationMiddleware = (store: Store<AppState>) => (next: Dispatch<AnyAction>) => (action: AnyAction): AnyAction => {
+  const result = next(action);
+
+  // process notebook actions after they're successfully aplied
+  switch (action.type) {
+    case coreActions.CREATE_CELL_ABOVE:
+    case coreActions.CREATE_CELL_BELOW:
+      {
+        const insertAction = handleInsertCell(action as coreActions.CreateCellAbove | coreActions.CreateCellBelow, store.getState());
+        if (insertAction) {
+          store.dispatch(insertAction);
+        }
+      }
+      break;
+    case coreActions.MOVE_CELL:
+      break;
+    case coreActions.DELETE_CELL:
+      const deleteAction = handleDeleteCell(action as coreActions.DeleteCell);
+      if (deleteAction) {
+        store.dispatch(deleteAction);
+      }
+      break;
+    case coreActions.SET_IN_CELL:
+      const contentAction = handleCellContent(action as coreActions.SetInCell<string>);
+      if (contentAction) {
+        store.dispatch(contentAction);
+      }
+      break;
   }
-  const notebook = coreSelectors.notebookModel(state, { contentRef }).notebook;
-  if (origin !== "remote") {
-    return joinSession.create({ filePath, notebook, kernelRef });
-  } else {
-    return initializeCellMap.create({ notebook, contentRef });
-  }
+
+  return result;
 };
 
 const handleInsertCell = (action: coreActions.CreateCellAbove | coreActions.CreateCellBelow, state: AppState) => {
@@ -83,51 +107,4 @@ const handleCellContent = (action: coreActions.SetInCell<string>) => {
     return recordCellContent.create({ id, value });
   }
   return null;
-};
-
-/**
- * The recording middleware intercepts notebook edits and forwards them as mythic actions
- * for further processing.
- * The main purpose of the middleware is to gather all necessary information from the store
- * to successfully record an action by the myth.
- */
-// eslint-disable-next-line @typescript-eslint/explicit-module-boundary-types
-export const recordingMiddleware = (store: Store<AppState>) => (next: Dispatch<AnyAction>) => (action: AnyAction) => {
-  const result = next(action);
-
-  switch (action.type) {
-    case coreActions.FETCH_CONTENT_FULFILLED:
-      {
-        const contentAction = handleFetchContent(action as any, store.getState());
-        if (contentAction) {
-          store.dispatch(contentAction);
-        }
-      }
-      break;
-    case coreActions.CREATE_CELL_ABOVE:
-    case coreActions.CREATE_CELL_BELOW:
-      {
-        const insertAction = handleInsertCell(action as any, store.getState());
-        if (insertAction) {
-          store.dispatch(insertAction);
-        }
-      }
-      break;
-    case coreActions.MOVE_CELL:
-      break;
-    case coreActions.DELETE_CELL:
-      const deleteAction = handleDeleteCell(action as any);
-      if (deleteAction) {
-        store.dispatch(deleteAction);
-      }
-      break;
-    case coreActions.SET_IN_CELL:
-      const contentAction = handleCellContent(action as any);
-      if (contentAction) {
-        store.dispatch(contentAction);
-      }
-      break;
-  }
-
-  return result;
 };

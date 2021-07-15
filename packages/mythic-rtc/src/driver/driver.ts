@@ -5,6 +5,7 @@ import { AppState, ContentRef } from "@nteract/types";
 import { MythicAction } from "@nteract/myths";
 import { IActionRecorder, ICollaborationBackend, ICollaborationDriver } from "../types";
 
+/** Collaboration driver placeholder */
 export class CollaborationDriver implements ICollaborationDriver, IActionRecorder {
     constructor(
         private readonly backend: ICollaborationBackend,
