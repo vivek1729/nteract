@@ -118,42 +118,31 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
       if (this.props.onChange) {
         this.props.onChange(this.editor.getValue(), e);
       }
-
-      this.calculateHeight();
     }
   }
 
   /**
-   * Adjust the height of editor
+   * Adjust the height of editor container
    *
-   * @remarks
-   * The way to determine how many lines we should display in editor:
-   * If numberOfLines is not set or set to 0, we adjust the height to fit the content
-   * If numberOfLines is specified we respect that setting
+   * @param height Expected height of the editor container
+   * We check the editor's content height and set the container height to match it
+   *
    */
-  calculateHeight() {
+  calculateHeight(height?: number) {
     // Make sure we have an editor
     if (!this.editor) {
       return;
     }
 
-    // Make sure we have a model
-    const model = this.editor.getModel();
-    if (!model) {
-      return;
+    if (typeof height === "undefined") {
+      // Retrieve content height directly from the editor if no height provided as param
+      height = this.editor.getContentHeight();
     }
-
     if (this.editorContainerRef && this.editorContainerRef.current) {
-      const expectedLines = this.props.numberOfLines || model.getLineCount();
-      // The find & replace menu takes up 2 lines, that is why 2 line is set as the minimum number of lines
-      const finalizedLines = Math.max(expectedLines, 1) + 1;
-      const lineHeight = this.editor.getOption(monaco.editor.EditorOption.lineHeight);
-      const contentHeight = finalizedLines * lineHeight;
-
-      if (this.contentHeight !== contentHeight) {
-        this.editorContainerRef.current.style.height = contentHeight + "px";
+      if (this.contentHeight !== height) {
+        this.editorContainerRef.current.style.height = height + "px";
         this.editor.layout();
-        this.contentHeight = contentHeight;
+        this.contentHeight = height;
       }
     }
   }
@@ -229,8 +218,6 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
         this.props.onDidCreateEditor(this.editor);
       }
 
-      this.addEditorTopMargin();
-
       // Handle custom keyboard shortcuts
       if (this.editor && this.props.shortcutsHandler && this.props.shortcutsOptions) {
         this.props.shortcutsHandler(this.editor, this.props.shortcutsOptions);
@@ -265,7 +252,12 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
           this.editor.trigger("redo-event", "redo", {});
         }
       });
-
+      // Resize Editor container on content size change
+      this.editor.onDidContentSizeChange((info) => {
+        if (info.contentHeightChanged) {
+          this.calculateHeight(info.contentHeight);
+        }
+      });
       this.editor.onDidChangeModelContent(this.onDidChangeModelContent);
       this.editor.onDidFocusEditorText(this.onFocus);
       this.editor.onDidBlurEditorText(this.onBlur);
@@ -287,23 +279,6 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
           this.handleCoordsOutsideWidgetActiveRegion(e.event?.pos?.x, e.event?.pos?.y);
         });
       }
-    }
-  }
-
-  addEditorTopMargin() {
-    if (this.editor) {
-      // Monaco editor doesn't have margins
-      // https://github.com/notable/notable/issues/551
-      // This is a workaround to add an editor area 12px padding at the top
-      // so that cursors decorators and context menus can be rendered correctly.
-      this.editor.changeViewZones((changeAccessor) => {
-        const domNode = document.createElement("div");
-        changeAccessor.addZone({
-          afterLineNumber: 0,
-          heightInPx: 12,
-          domNode
-        });
-      });
     }
   }
 
@@ -363,7 +338,6 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
 
             // Set new model targeting the changed language.
             editor.setModel(monaco.editor.createModel(value, language, newUri));
-            this.addEditorTopMargin();
 
             // Restore cursor position to new model.
             if (position) {
