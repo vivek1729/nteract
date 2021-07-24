@@ -33,6 +33,7 @@ describe("MonacoEditor component is rendering correctly", () => {
 // Setup items shared by all tests in this block
 // Mock out the common API methods so that private function calls don't fail
 const mockEditor = {
+  onDidContentSizeChange: jest.fn(),
   onDidChangeModelContent: jest.fn(),
   onDidFocusEditorText: jest.fn(),
   onDidBlurEditorText: jest.fn(),
