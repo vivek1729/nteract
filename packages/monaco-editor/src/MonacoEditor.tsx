@@ -114,10 +114,8 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
   }
 
   onDidChangeModelContent(e: monaco.editor.IModelContentChangedEvent) {
-    if (this.editor) {
-      if (this.props.onChange) {
+    if (this.editor && this.props.onChange) {
         this.props.onChange(this.editor.getValue(), e);
-      }
     }
   }
 
@@ -138,12 +136,10 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
       // Retrieve content height directly from the editor if no height provided as param
       height = this.editor.getContentHeight();
     }
-    if (this.editorContainerRef && this.editorContainerRef.current) {
-      if (this.contentHeight !== height) {
-        this.editorContainerRef.current.style.height = height + "px";
-        this.editor.layout();
-        this.contentHeight = height;
-      }
+    if (this.editorContainerRef && this.editorContainerRef.current && (this.contentHeight !== height)) {
+      this.editorContainerRef.current.style.height = height + "px";
+      this.editor.layout();
+      this.contentHeight = height;
     }
   }
 
