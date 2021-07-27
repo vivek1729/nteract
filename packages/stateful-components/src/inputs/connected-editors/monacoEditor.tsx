@@ -70,11 +70,7 @@ const makeMapStateToProps = (initialState: AppState, ownProps: ComponentProps) =
       }
     const defaultEditorOptions: monaco.editor.IEditorOptions = {
       wordWrap,
-      autoClosingBrackets: "never",
-      padding: {
-        top: 12,
-        bottom: 5
-      }
+      autoClosingBrackets: "never"
     }
     const options = {
       ...defaultEditorOptions,

@@ -138,7 +138,7 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
     }
     if (this.editorContainerRef && this.editorContainerRef.current && (this.contentHeight !== height)) {
       this.editorContainerRef.current.style.height = height + "px";
-      this.editor.layout();
+      this.editor.layout({ width: this.editor.getLayoutInfo().width, height });
       this.contentHeight = height;
     }
   }
@@ -188,6 +188,10 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
         },
         model,
         overviewRulerLanes: 0,
+        padding: {
+          top: 12,
+          bottom: 5
+        },
         readOnly: this.props.readOnly,
         // Disable highlight current line, too much visual noise with it on.
         // VS Code also has it disabled for their notebook experience.
