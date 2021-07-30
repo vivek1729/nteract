@@ -317,7 +317,7 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
     }
   }
 
-  componentDidUpdate() {
+  componentDidUpdate(prevProps: IMonacoProps) {
     if (!this.editor) {
       return;
     }
@@ -334,7 +334,8 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
     }
 
     // Ensures that the source contents of the editor (value) is consistent with the state of the editor
-    if (this.editor.getValue() !== this.props.value) {
+    // and the value has actually changed.
+    if (this.editor.getValue() !== this.props.value && prevProps.value !== this.props.value) {
       this.editor.setValue(this.props.value);
     }
 
