@@ -138,6 +138,11 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
     }
     if (this.editorContainerRef && this.editorContainerRef.current && (this.contentHeight !== height)) {
       this.editorContainerRef.current.style.height = height + "px";
+      /**
+       * With no params, the layout method queries the DOM to get the parent container dimensions
+       * This causes a forced layout by the browser
+       * We pass in the expected width and height to as an optimization to avoid the forced layout
+       */
       this.editor.layout({ width: this.editor.getLayoutInfo().width, height });
       this.contentHeight = height;
     }
@@ -206,11 +211,12 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
           horizontalScrollbarSize: 0,
           arrowSize: 30
         },
-        scrollBeyondLastLine: false,
         theme: this.props.theme,
         value: this.props.value,
         // Apply custom settings from configuration
         ...this.props.options,
+        // this is required, otherwise the editor will continue to change its size on layout if set to true in options overrides
+        scrollBeyondLastLine: false
       });
 
       // Handle on create events
