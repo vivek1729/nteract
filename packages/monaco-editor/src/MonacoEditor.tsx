@@ -318,7 +318,7 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
     // and the value has actually changed.
     if (prevProps.value !== this.props.value && this.editor.getValue() !== this.props.value) {
       this.editor.setValue(this.props.value);
-    }
+    } 
 
     completionProvider.setChannels(this.props.channels);
 
