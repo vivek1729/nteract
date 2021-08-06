@@ -170,6 +170,35 @@ describe("MonacoEditor lifeCycle methods set up", () => {
     expect(mockCreateEditor).toHaveBeenCalledTimes(1);
     expect(mockEditor.focus).toHaveBeenCalledTimes(0);
   });
+
+  it("Should call editor setValue when value prop has changed on componentDidUpdate.", () => {
+    mockEditor.setValue = jest.fn();
+    const editorWrapper = mount(
+      <MonacoEditor
+        {...monacoEditorCommonProps}
+        value="initial_value"
+      />
+    );
+    editorWrapper.setProps({ value: "different_value" });
+
+    // We expect setValue is called twice. First on componentDidMount and second on componentDidUpdate 
+    // when the props.value has new different value.
+    expect(mockEditor.setValue).toHaveBeenCalledTimes(2);
+  });
+
+  it("Should not call editor setValue when value prop has not changed on componentDidUpdate.", () => {
+    mockEditor.setValue = jest.fn();
+    const editorWrapper = mount(
+      <MonacoEditor
+        {...monacoEditorCommonProps}
+        value="initial_value"
+      />
+    );
+    editorWrapper.setProps({ value: "initial_value" });
+    
+    // We expect setValue is called once on componentDidMount when the props.value does not have different value.
+    expect(mockEditor.setValue).toHaveBeenCalledTimes(1);
+  });
 });
 
 describe("MonacoEditor lineNumbers configuration", () => {
