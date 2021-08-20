@@ -7,6 +7,10 @@
   "scripts": {
     "release": "semantic-release -e semantic-release-monorepo --tag-format='rx-jupyter@${version}'"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/nteract/nteract.git"
+  },
   "keywords": [
     "jupyter",
     "rxjs",
