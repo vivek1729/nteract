@@ -9,7 +9,8 @@ import { existsSync } from "fs";
 import { join, resolve } from "path";
 import { fromEvent, Observable, Subscriber, zip } from "rxjs";
 import { buffer, first, last, skipUntil, takeUntil } from "rxjs/operators";
-import yargs from "yargs/yargs";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 import { QUITTING_STATE_NOT_STARTED, QUITTING_STATE_QUITTING, setQuittingState } from "./actions";
 import { initAutoUpdater } from "./auto-updater";
 import { defaultKernel } from "./config-options";
@@ -30,7 +31,7 @@ const store = configureStore(undefined);
 // HACK: The main process store should not be stored in a global.
 (global as any).store = store;
 
-const argv = yargs()
+const argv = yargs(hideBin(process.argv))
   .version((() => require("./../../package.json").version)())
   .usage("Usage: nteract <notebooks> [options]")
   .example("nteract notebook1.ipynb notebook2.ipynb", "Open notebooks")
@@ -41,7 +42,7 @@ const argv = yargs()
   .alias("h", "help")
   .describe("verbose", "Display debug information")
   .help("help")
-  .parse(process.argv.slice(1));
+  .argv;
 
 log.info("args", argv);
 
