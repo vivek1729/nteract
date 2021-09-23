@@ -1,6 +1,6 @@
 {
   "name": "@nteract/stateful-components",
-  "version": "1.7.10",
+  "version": "1.7.11",
   "description": "A collection of sub-components pre-connected to nteract's Redux state",
   "keywords": [
     "redux",
