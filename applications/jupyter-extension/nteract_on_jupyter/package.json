@@ -20,7 +20,7 @@
   "dependencies": {
     "@nteract/data-explorer": "^8.0.0",
     "@nteract/directory-listing": "^2.1.0",
-    "@nteract/jupyter-widgets": "^4.4.14",
+    "@nteract/jupyter-widgets": "^4.1.16",
     "@nteract/logos": "^1.0.0",
     "@nteract/mathjax": "4.0.16",
     "@nteract/octicons": "^2.0.0",
@@ -37,7 +37,6 @@
     "react-dom": "^16.3.2",
     "react-hot-loader": "^4.1.2",
     "react-hotkeys": "^2.0.0",
-    "react-redux": "^6.0.0",
     "react-router-dom": "^5.0.0",
     "redux": "^4.0.0",
     "redux-observable": "^2.0.0-alpha.0",

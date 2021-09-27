@@ -33,13 +33,14 @@
     "react-helmet": "^5.2.0",
     "react-hot-loader": "^4.1.2",
     "react-hotkeys": "^2.0.0",
-    "react-redux": "^6.0.0",
+    "react-redux": "7.2.5",
     "redux": "^4.0.0",
     "scroll-into-view-if-needed": "2.2.28"
   },
   "peerDependencies": {
     "immutable": "^4.0.0-rc.12",
     "react": "^16.3.2",
+    "react-redux": "^7.2.5",
     "styled-components": ">= 5.0.1"
   },
   "author": "Kyle Kelley <rgbkrk@gmail.com>",
