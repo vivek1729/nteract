@@ -16,7 +16,6 @@
     "@nteract/commutable": "^7.4.5",
     "@nteract/core": "^15.1.9",
     "@nteract/types": "^7.1.9",
-    "react-redux": "7.2.5",
     "redux": "^4.0.0"
   },
   "peerDependencies": {
