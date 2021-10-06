@@ -6,7 +6,7 @@ Security is an important part of software and we want to work with you to ensure
 
 **Please do not report security vulnerabilities through public GitHub issues.**
 
-Instead, please report them by sending an email to [safia at safia dot rocks](mailto:safia@safia.rocks).
+Instead, please report them by sending an email to [safia at safia dot rocks]() and [willingc at gmail dot com]().
 
 Please include the requested information listed below (as much as you can provide) to help us better understand the nature and scope of the possible issue:
 
