@@ -95,7 +95,7 @@ export function message<MT extends MessageType>(
     parent_header: {},
     content,
     channel,
-    buffers: new Uint8Array()
+    buffers: []
   };
 }
 
