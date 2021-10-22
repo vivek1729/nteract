@@ -174,7 +174,7 @@ export function executeRequest(
       ...options
     },
     channel,
-    buffers: new Uint8Array()
+    buffers: []
   };
 }
 
