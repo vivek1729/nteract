@@ -1,6 +1,6 @@
 {
   "name": "@nteract/messaging",
-  "version": "7.0.19",
+  "version": "7.0.20",
   "description": "Messaging mechanics for nteract apps (jupyter spec)",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
