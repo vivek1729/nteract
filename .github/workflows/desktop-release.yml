@@ -12,13 +12,12 @@ jobs:
       - uses: actions/setup-node@v1
         with:
           node-version: '14'
-      - run: yarn
-      - run: yarn build
       - name: Build desktop app
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
           GH_TOKEN: ${{ secrets.SEMANTIC_RELEASE_GITHUB_TOKEN }}
         run: |
+          yarn
           yarn verifyBeforePublish
           yarn dist:all
           yarn ship:desktop
