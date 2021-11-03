@@ -33,7 +33,7 @@
     "build:all:cleanly": "yarn clean && yarn && yarn build:all",
     "build": "cross-env NODE_ENV=production npm run build:packages",
     "build:clean": "npm run build:packages -- --clean",
-    "build:apps": "lerna run build --scope nteract --scope nteract-on-jupyter --parallel --stream",
+    "build:apps": "lerna run build --scope nteract --parallel --stream",
     "build:jext": "lerna run hot --scope nteract-on-jupyter --stream",
     "build:desktop": "lerna run build --scope nteract --stream",
     "build:desktop:watch": "lerna run build:watch --scope nteract --stream",
