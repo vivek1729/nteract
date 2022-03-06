@@ -1,6 +1,6 @@
 import { Channels } from "@nteract/messaging";
 import { CellType, CellId } from "@nteract/commutable";
-import * as monaco from "monaco-editor";
+import * as monaco from "monaco-editor/esm/vs/editor/editor.api";
 import * as React from "react";
 import { completionProvider } from "./completions/completionItemProvider";
 import { ContentRef } from "@nteract/core";
