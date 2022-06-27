@@ -8,12 +8,9 @@ const composeEnhancers =
   (window as any).__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 
 export const configureStore = makeConfigureStore<AppState>()({
-  packages: [
-    notifications,
-  ],
+  packages: [notifications],
   reducers: {
     app: reducers.app,
-    comms: reducers.comms,
     core: reducers.core as any,
   },
   epics: coreEpics.allEpics,

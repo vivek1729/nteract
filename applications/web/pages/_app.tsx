@@ -22,6 +22,8 @@ import "@nteract/styles/editor-overrides.css";
 
 import "@nteract/styles/markdown/github.css";
 
+import "../css/prism.css"
+
 interface StoreProps {
   store: Store;
 }

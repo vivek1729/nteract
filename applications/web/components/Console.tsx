@@ -1,32 +1,34 @@
-import * as React from "react";
+import React, { FC,  HTMLAttributes} from "react";
 import styled from "styled-components";
 
 
-const ConsoleDiv = styled.div`
+const ConsoleDiv = styled.div<Props>`
   clear: left;
-  height: 200px;
-  padding: 15px;
+  min-height: 200px;
+  padding: 20px;
   color: #f1f1f1;
   font-family: Monaco, monospace;
   font-size: 12px;
   white-space: pre-wrap;
   word-wrap: break-word;
-  background-color: #2d2424;
+  background-color: #22223B;
   overflow: auto;
   counter-reset: line-numbering;
-  margin-top: 0;
   border-top: 1px solid #000;
+  z-index: 1000;
 `;
 
-export default class Console extends React.Component {
-    constructor(props){
-        super(props);
-    }
-    render() {
+
+export interface Props extends HTMLAttributes<HTMLDivElement> {
+  children?: React.ReactNode;
+}
+
+// TODO: Implement iterm.js here to connect with the termianl | This can be also done when working with jupyter server
+export const Console: FC<Props> = (props: Props) => {
       return (
-        <ConsoleDiv>  
-                Console
-        </ConsoleDiv>    
+        <ConsoleDiv {...props} >
+          {props.children} 
+        </ConsoleDiv>
       );
-    }
   } 
+

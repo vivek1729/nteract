@@ -8,6 +8,7 @@
   "references": [
     { "path": "../commutable" },
     { "path": "../core" },
-    { "path": "../types" }
+    { "path": "../types" },
+    { "path": "../mythic-multiselect" }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@nteract/mythic-multiselect",
+  "version": "0.0.1",
+  "description": "For selecting multiple cells",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "nteractDesktop": "src/index.ts",
+  "scripts": {},
+  "keywords": [
+    "nteract"
+  ],
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@nteract/myths": "^0.1.9"
+  },
+  "peerDependencies": {
+    "immutable": "^4.0.0-rc.12"
+  },
+  "author": "nteract contributers",
+  "license": "BSD-3-Clause"
+}
