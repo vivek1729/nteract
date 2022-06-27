@@ -96,7 +96,6 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
   contentHeight?: number;
   private cursorPositionListener?: monaco.IDisposable;
 
-  private blurEditorWidgetListener?: monaco.IDisposable;
   private mouseMoveListener?: monaco.IDisposable;
 
   constructor(props: IMonacoProps) {
@@ -399,9 +398,7 @@ export default class MonacoEditor extends React.Component<IMonacoProps> {
         console.error(`Error occurs in disposing editor: ${JSON.stringify(err)}`);
       }
     }
-    if (this.blurEditorWidgetListener) {
-      this.blurEditorWidgetListener.dispose();
-    }
+
     if (this.mouseMoveListener) {
       this.mouseMoveListener.dispose();
     }
